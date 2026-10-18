@@ -85,7 +85,15 @@ an account for 15 minutes; every sign-in, request, decision and admin action is 
 
 ## Deploy to Vercel (testing)
 
-The repository deploys as **two Vercel projects** from the same GitHub repo, plus a Neon database.
+Both Vercel projects (`nwrmp-api`, `nwrmp-web`) are connected to this GitHub repository:
+
+- a push to **`main`** deploys to production (https://nwrmp-web.vercel.app);
+- a push to any other branch, or a pull request, gets its own preview deployment.
+
+Preview deployments of the API use the same Neon database as production unless Neon preview branching is
+enabled in the Neon integration settings, so test new migrations carefully.
+
+To set up the projects from scratch, the repository deploys as **two Vercel projects** from the same GitHub repo, plus a Neon database.
 
 1. **API project**: in Vercel, *Add New → Project*, import `abdiMuhamud/NWRMP`, set **Root Directory** to `apps/api`.
    `apps/api/vercel.json` builds `src/vercel.ts` as a serverless function.
