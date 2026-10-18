@@ -4,6 +4,8 @@ import {
   Droplets,
   FileBarChart,
   FlaskConical,
+  History,
+  Inbox,
   LayoutDashboard,
   ListChecks,
   Map as MapIcon,
@@ -12,12 +14,17 @@ import {
   Wrench,
   type LucideIcon,
 } from 'lucide-react';
+import type { Permission } from '../../lib/types';
 
 export interface NavItem {
   to: string;
   label: string;
   icon: LucideIcon;
   soon?: boolean;
+  /** Hidden unless the signed-in user holds this permission */
+  permission?: Permission;
+  /** Shows the number of requests waiting for the user's review */
+  badge?: 'approvals';
 }
 
 export interface NavGroup {
@@ -37,7 +44,8 @@ export const NAV: NavGroup[] = [
     label: 'Registry',
     items: [
       { to: '/sources', label: 'Water sources', icon: Droplets },
-      { to: '/data-quality', label: 'Data quality', icon: ClipboardCheck },
+      { to: '/approvals', label: 'Approvals', icon: Inbox, badge: 'approvals' },
+      { to: '/data-quality', label: 'Data quality', icon: ClipboardCheck, permission: 'quality.view' },
     ],
   },
   {
@@ -52,8 +60,9 @@ export const NAV: NavGroup[] = [
   {
     label: 'Administration',
     items: [
+      { to: '/admin/users', label: 'Users and roles', icon: Users, permission: 'users.manage' },
+      { to: '/admin/audit', label: 'Audit log', icon: History, permission: 'audit.view' },
       { to: '/planned/forms', label: 'Form builder', icon: ListChecks, soon: true },
-      { to: '/planned/users', label: 'Users & roles', icon: Users, soon: true },
       { to: '/planned/mobile', label: 'Mobile app', icon: Smartphone, soon: true },
     ],
   },

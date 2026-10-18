@@ -11,12 +11,15 @@ import { StatTile } from '../components/ui/StatTile';
 import { ErrorState, LoadingBlock, Skeleton } from '../components/ui/States';
 import { STATUS_META, TYPE_META } from '../lib/domain';
 import { formatCompact, formatDate, formatNumber, formatPercent } from '../lib/format';
+import { useAuth } from '../lib/auth';
 import { useReference, useSourceGeojson, useSummary } from '../lib/queries';
 import type { Summary } from '../lib/types';
 
 export function Dashboard() {
   const [params, setParams] = useSearchParams();
-  const region = Number(params.get('region')) || undefined;
+  const { scopeRegionId } = useAuth();
+  // Regional users always see their own region.
+  const region = scopeRegionId ?? (Number(params.get('region')) || undefined);
   const reference = useReference();
   const summary = useSummary(region);
   const geojson = useSourceGeojson({ region });
@@ -29,6 +32,7 @@ export function Dashboard() {
         title={regionName ? `Water sources in ${regionName}` : 'National water sources'}
         description="Registered water points, their condition, and the people and livestock that depend on them."
         actions={
+          !scopeRegionId && (
           <Select
             label="Region"
             hideLabel
@@ -43,6 +47,7 @@ export function Dashboard() {
               </option>
             ))}
           </Select>
+          )
         }
       />
 

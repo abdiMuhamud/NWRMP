@@ -134,7 +134,9 @@ export interface SourceDetail {
   details: Record<string, string | number | null>;
   dataSource: string | null;
   legacyRef: string | null;
+  createdAt: string;
   updatedAt: string;
+  updatedByName: string | null;
   inspections: Inspection[];
   interventions: Intervention[];
   issues: RecordIssue[];
@@ -156,10 +158,140 @@ export interface DetailField {
   unit?: string;
 }
 
+export type FieldKind = 'text' | 'textarea' | 'number' | 'integer' | 'boolean' | 'date' | 'select' | 'region';
+
+export interface FieldDef {
+  key: string;
+  label: string;
+  section: string;
+  kind: FieldKind;
+  unit?: string;
+  required?: boolean;
+  min?: number;
+  max?: number;
+  options?: { value: string; label: string }[];
+  suggestions?: string[];
+  help?: string;
+}
+
 export interface Reference {
   regions: { id: number; code: string; name: string; districts: { id: number; name: string }[] }[];
   sourceTypes: { code: SourceType; label: string; prefix: string; detailFields: DetailField[] }[];
   statuses: FunctionalStatus[];
+  sections: { id: string; label: string }[];
+  fields: FieldDef[];
+  roles: { code: Role; label: string; regionScoped: boolean }[];
+  departments: { code: string; label: string; approves: SourceType[] }[];
+}
+
+export type Role =
+  | 'admin'
+  | 'department_reviewer'
+  | 'regional_coordinator'
+  | 'field_officer'
+  | 'lab_officer'
+  | 'maintenance_officer'
+  | 'viewer';
+
+export type Permission = 'sources.view' | 'sources.propose' | 'sources.approve' | 'quality.view' | 'users.manage' | 'audit.view';
+
+export interface Me {
+  user: {
+    id: string;
+    email: string;
+    fullName: string;
+    role: Role;
+    roleLabel: string;
+    department: string | null;
+    regionId: number | null;
+    regionName: string | null;
+    mustChangePassword: boolean;
+  };
+  permissions: Permission[];
+  approvableTypes: SourceType[];
+}
+
+export interface UserRow {
+  id: string;
+  email: string;
+  fullName: string;
+  phone: string | null;
+  role: Role;
+  department: string | null;
+  regionId: number | null;
+  regionName: string | null;
+  isActive: boolean;
+  mustChangePassword: boolean;
+  lastLoginAt: string | null;
+  createdAt: string;
+  locked: boolean;
+}
+
+export type FieldValue = string | number | boolean | null;
+
+export interface SourceValues {
+  fields: Record<string, FieldValue>;
+  details: Record<string, FieldValue>;
+}
+
+export type ChangeStatus = 'pending' | 'approved' | 'rejected' | 'withdrawn';
+
+export interface ChangeListItem {
+  id: string;
+  kind: 'create' | 'update';
+  status: ChangeStatus;
+  sourceId: string | null;
+  sourceType: SourceType;
+  sourceName: string | null;
+  sourceCode: string | null;
+  regionName: string;
+  requestedAt: string;
+  requestedBy: string;
+  reviewedAt: string | null;
+  reviewedBy: string | null;
+  fieldCount: number;
+}
+
+export interface ChangeRequest {
+  id: string;
+  kind: 'create' | 'update';
+  status: ChangeStatus;
+  sourceId: string | null;
+  sourceCode: string | null;
+  sourceType: SourceType;
+  sourceName: string | null;
+  regionId: number;
+  regionName: string;
+  proposed: SourceValues;
+  previous: SourceValues | null;
+  current: SourceValues | null;
+  stale: boolean;
+  comment: string | null;
+  requestedBy: { id: string; name: string };
+  requestedAt: string;
+  reviewedBy: { id: string; name: string } | null;
+  reviewedAt: string | null;
+  reviewComment: string | null;
+  warnings: { field: string; message: string }[];
+  canReview: boolean;
+  reviewBlockedReason: string | null;
+  canWithdraw: boolean;
+}
+
+export interface HistoryEntry {
+  id: string;
+  at: string;
+  action: string;
+  summary: string;
+  userName: string | null;
+  changes: { requestId?: string; requestedBy?: string; proposed?: SourceValues; previous?: SourceValues | null } | null;
+}
+
+export interface AuditEntry extends HistoryEntry {
+  entityType: string | null;
+  entityId: string | null;
+  ip: string | null;
+  userId: string | null;
 }
 
 export interface CountRow {

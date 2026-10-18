@@ -1,11 +1,13 @@
 import type { Db } from './db';
 import * as m001 from './migrations/001-init';
 import * as m002 from './migrations/002-regions';
+import * as m003 from './migrations/003-users-workflow';
 
 // Ordered list. Never edit a migration that has been applied; add a new one.
 const migrations: { id: string; sql: string }[] = [
   { id: '001-init', sql: m001.sql },
   { id: '002-regions', sql: m002.sql },
+  { id: '003-users-workflow', sql: m003.sql },
 ];
 
 export async function migrate(db: Db): Promise<string[]> {
