@@ -1,0 +1,17 @@
+{
+  "name": "nwrmp",
+  "private": true,
+  "description": "National Water Resource Management Platform - Ministry of Water Development",
+  "scripts": {
+    "setup": "npm install && npm --prefix apps/api install && npm --prefix apps/web install",
+    "dev": "concurrently -n api,web -c green,blue \"npm --prefix apps/api run dev\" \"npm --prefix apps/web run dev\"",
+    "build": "npm --prefix apps/api run build && npm --prefix apps/web run build",
+    "typecheck": "npm --prefix apps/api run typecheck && npm --prefix apps/web run typecheck"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

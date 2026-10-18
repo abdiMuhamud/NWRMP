@@ -1,0 +1,106 @@
+@import "tailwindcss";
+
+/*
+ * NWRMP design tokens
+ * Brand colours are sampled from the Ministry of Water Development emblem:
+ *   green #0B8034 (wordmark), gold #F4E833 (emblem disc), water blue #1A5A8C.
+ * Source-type and status colours are validated for colour-vision deficiency
+ * (adjacent-pair ΔE ≥ 8); the map adds shape as a second channel.
+ */
+@theme {
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Mono", "Segoe UI Mono", Consolas, monospace;
+
+  --color-brand-50: #eef8f1;
+  --color-brand-100: #d5eedd;
+  --color-brand-200: #abdcbb;
+  --color-brand-300: #76c393;
+  --color-brand-400: #3ea76a;
+  --color-brand-500: #16904c;
+  --color-brand-600: #0b8034;
+  --color-brand-700: #0a6a2c;
+  --color-brand-800: #0b5426;
+  --color-brand-900: #0a4520;
+  --color-brand-950: #062c15;
+
+  --color-gold-100: #fdf9cf;
+  --color-gold-200: #fbf3a1;
+  --color-gold-300: #f8ee75;
+  --color-gold-400: #f4e833;
+  --color-gold-600: #a99c0c;
+  --color-gold-800: #5f5706;
+
+  --color-water-50: #eef5fb;
+  --color-water-100: #d7e8f5;
+  --color-water-400: #3d82bd;
+  --color-water-500: #2a6ca6;
+  --color-water-600: #1a5a8c;
+  --color-water-700: #164a73;
+
+  --color-page: #f5f6f3;
+  --color-surface: #ffffff;
+  --color-line: #e2e5df;
+  --color-line-strong: #c9cdc5;
+  --color-ink: #141a15;
+  --color-ink-2: #4a524b;
+  --color-ink-3: #727a73;
+
+  --color-type-borehole: #2a78d6;
+  --color-type-shallow-well: #e87ba4;
+  --color-type-berkad: #eda100;
+  --color-type-dam: #1baf7a;
+  --color-type-spring: #eb6834;
+
+  --color-good: #0ca30c;
+  --color-good-ink: #006300;
+  --color-good-wash: #e6f5e6;
+  --color-warn: #fab219;
+  --color-warn-ink: #7a5200;
+  --color-warn-wash: #fff4dc;
+  --color-critical: #d03b3b;
+  --color-critical-ink: #a32323;
+  --color-critical-wash: #fbeaea;
+  --color-muted: #898781;
+  --color-muted-ink: #52514e;
+  --color-muted-wash: #efeeeb;
+
+  --shadow-card: 0 1px 2px rgb(20 26 21 / 0.04), 0 1px 1px rgb(20 26 21 / 0.03);
+  --shadow-float: 0 8px 24px rgb(20 26 21 / 0.12), 0 2px 6px rgb(20 26 21 / 0.08);
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-page text-ink antialiased;
+    font-feature-settings: "cv11", "ss01";
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-brand-600;
+  }
+
+  ::selection {
+    @apply bg-brand-100 text-brand-950;
+  }
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* MapLibre popups styled to match cards */
+.maplibregl-popup-content {
+  @apply rounded-xl p-0 shadow-float;
+}
+
+.maplibregl-popup-close-button {
+  @apply right-1.5 top-1.5 grid size-7 place-items-center rounded-md text-lg text-ink-3 hover:bg-page hover:text-ink;
+}
+
+.maplibregl-ctrl-group {
+  @apply overflow-hidden rounded-lg! shadow-card!;
+}
