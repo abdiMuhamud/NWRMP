@@ -12,12 +12,14 @@ import { ErrorState, LoadingBlock, Skeleton } from '../components/ui/States';
 import { STATUS_META, TYPE_META } from '../lib/domain';
 import { formatCompact, formatDate, formatNumber, formatPercent } from '../lib/format';
 import { useAuth } from '../lib/auth';
-import { useReference, useSourceGeojson, useSummary } from '../lib/queries';
+import { useInspectionCounts, useReference, useSourceGeojson, useSummary } from '../lib/queries';
 import type { Summary } from '../lib/types';
 
 export function Dashboard() {
   const [params, setParams] = useSearchParams();
-  const { scopeRegionId } = useAuth();
+  const { scopeRegionId, can, me } = useAuth();
+  const inspectionCounts = useInspectionCounts(Boolean(me));
+  const todo = can('inspections.submit') ? (inspectionCounts.data?.openAssignments ?? 0) + (inspectionCounts.data?.returned ?? 0) : 0;
   // Regional users always see their own region.
   const region = scopeRegionId ?? (Number(params.get('region')) || undefined);
   const reference = useReference();
@@ -50,6 +52,21 @@ export function Dashboard() {
           )
         }
       />
+
+      {todo > 0 && (
+        <Link
+          to="/field"
+          className="mb-6 flex items-center justify-between gap-3 rounded-xl border border-brand-200 bg-brand-50 px-4 py-3 text-sm text-brand-800 hover:bg-brand-100"
+        >
+          <span>
+            <span className="font-semibold">
+              You have {todo} inspection{todo === 1 ? '' : 's'} to do.
+            </span>{' '}
+            Open your list to start.
+          </span>
+          <ArrowRight size={16} aria-hidden />
+        </Link>
+      )}
 
       {summary.isError ? (
         <Card>

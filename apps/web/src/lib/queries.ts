@@ -1,10 +1,15 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { apiGet, type QueryParams } from './api';
+import { withOfflineCache } from './offline';
 import type {
+  Assignment,
   AuditEntry,
   ChangeListItem,
   ChangeRequest,
   HistoryEntry,
+  InspectionDetail,
+  InspectionListItem,
+  Inspector,
   NearbySource,
   Page,
   QualityReport,
@@ -19,7 +24,8 @@ import type {
 export function useReference() {
   return useQuery({
     queryKey: ['reference'],
-    queryFn: ({ signal }) => apiGet<Reference>('/reference', {}, signal),
+    // Cached on the device so field forms work offline.
+    queryFn: ({ signal }) => withOfflineCache('reference', () => apiGet<Reference>('/reference', {}, signal)),
     staleTime: 10 * 60_000,
   });
 }
@@ -125,5 +131,55 @@ export function useAudit(params: QueryParams) {
     queryKey: ['audit', params],
     queryFn: ({ signal }) => apiGet<Page<AuditEntry>>('/audit', params, signal),
     placeholderData: keepPreviousData,
+  });
+}
+
+export function useMyAssignments(enabled = true) {
+  return useQuery({
+    queryKey: ['assignments', 'mine'],
+    queryFn: ({ signal }) => withOfflineCache('assignments-mine', () => apiGet<Assignment[]>('/inspections/assignments', { box: 'mine' }, signal)),
+    enabled,
+    networkMode: 'always',
+  });
+}
+
+export function useTeamAssignments(enabled = true) {
+  return useQuery({
+    queryKey: ['assignments', 'team'],
+    queryFn: ({ signal }) => apiGet<Assignment[]>('/inspections/assignments', { box: 'team' }, signal),
+    enabled,
+  });
+}
+
+export function useInspections(box: 'review' | 'mine' | 'recent', enabled = true) {
+  return useQuery({
+    queryKey: ['inspections', box],
+    queryFn: ({ signal }) => apiGet<InspectionListItem[]>('/inspections', { box }, signal),
+    enabled,
+  });
+}
+
+export function useInspection(id: string | undefined) {
+  return useQuery({
+    queryKey: ['inspection', id],
+    queryFn: ({ signal }) => apiGet<InspectionDetail>(`/inspections/${id}`, {}, signal),
+    enabled: Boolean(id),
+  });
+}
+
+export function useInspectionCounts(enabled: boolean) {
+  return useQuery({
+    queryKey: ['inspections', 'counts'],
+    queryFn: ({ signal }) => apiGet<{ toReview: number; openAssignments: number; returned: number }>('/inspections/counts', {}, signal),
+    enabled,
+    refetchInterval: 60_000,
+  });
+}
+
+export function useInspectors(regionId: number | undefined, enabled: boolean) {
+  return useQuery({
+    queryKey: ['inspectors', regionId ?? null],
+    queryFn: ({ signal }) => apiGet<Inspector[]>('/inspections/inspectors', { regionId }, signal),
+    enabled,
   });
 }

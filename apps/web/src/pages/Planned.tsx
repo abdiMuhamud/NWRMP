@@ -7,16 +7,6 @@ import { NotFound } from './NotFound';
 // Roadmap from the NWRMP proposal: 1 Registry + GIS, 2 Inspections + dynamic forms,
 // 3 Water quality + maintenance, 4 Reports + analytics, 5 Mobile + offline, 6 Government integrations.
 const PLANNED: Record<string, { phase: string; summary: string; features: string[] }> = {
-  inspections: {
-    phase: 'Phase 2',
-    summary: 'Plan and record field visits. Every visit is kept as its own record, so the history of each source is never overwritten.',
-    features: [
-      'Assign inspections to field teams by region',
-      'Record condition, status and photos at each visit',
-      'Approval flow: field officer → regional coordinator → department',
-      'Flag overdue inspections',
-    ],
-  },
   'water-quality': {
     phase: 'Phase 3',
     summary: 'Laboratory and field test results linked to each water source, with alerts when results exceed national standards.',
@@ -59,12 +49,13 @@ const PLANNED: Record<string, { phase: string; summary: string; features: string
   },
   mobile: {
     phase: 'Phase 5',
-    summary: 'An Android app for field teams that works without a connection and syncs when back in coverage.',
+    summary:
+      'Field inspections already work on any phone: open NWRMP in the browser and choose "Install app" (or "Add to Home screen"). A native Android app will follow.',
     features: [
-      'Offline forms with GPS and camera',
-      'Assigned surveys and inspections',
-      'Automatic sync and conflict-free history',
-      'Until then: ODK / KoboToolbox forms feeding the registry',
+      'Available now: offline inspection forms with GPS and camera, sent automatically when back online',
+      'Planned: native Android app with background sync',
+      'Planned: offline basemaps for whole regions',
+      'Planned: barcode / QR tags on water points',
     ],
   },
 };

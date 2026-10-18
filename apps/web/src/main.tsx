@@ -13,6 +13,10 @@ import { Users } from './pages/admin/Users';
 import { Approvals } from './pages/Approvals';
 import { Dashboard } from './pages/Dashboard';
 import { DataQuality } from './pages/DataQuality';
+import { InspectionForm } from './pages/field/InspectionForm';
+import { MyInspections } from './pages/field/MyInspections';
+import { InspectionReview } from './pages/inspections/InspectionReview';
+import { Inspections } from './pages/inspections/Inspections';
 import { Login } from './pages/Login';
 import { MapPage } from './pages/MapPage';
 import { NotFound } from './pages/NotFound';
@@ -54,6 +58,10 @@ const router = createBrowserRouter([
       { path: 'approvals', element: <Approvals /> },
       { path: 'approvals/:id', element: <ReviewRequest /> },
       { path: 'data-quality', element: <DataQuality /> },
+      { path: 'field', element: <MyInspections /> },
+      { path: 'field/inspect/:sourceId', element: <InspectionForm /> },
+      { path: 'inspections', element: <Inspections /> },
+      { path: 'inspections/:id', element: <InspectionReview /> },
       { path: 'admin/users', element: <Users /> },
       { path: 'admin/audit', element: <Audit /> },
       { path: 'account', element: <Account /> },

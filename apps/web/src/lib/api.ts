@@ -23,12 +23,17 @@ function buildUrl(path: string, params: QueryParams = {}) {
   return url;
 }
 
-async function request<T>(method: string, path: string, options: { params?: QueryParams; body?: unknown; signal?: AbortSignal } = {}): Promise<T> {
+async function request<T>(
+  method: string,
+  path: string,
+  options: { params?: QueryParams; body?: unknown; form?: FormData; signal?: AbortSignal } = {},
+): Promise<T> {
   const headers: Record<string, string> = { Accept: 'application/json' };
   if (method !== 'GET') {
     // Required by the API for every state-changing request (CSRF defence).
     headers['X-Requested-With'] = 'nwrmp';
-    headers['Content-Type'] = 'application/json';
+    // For uploads the browser sets the multipart Content-Type (with its boundary) itself.
+    if (!options.form) headers['Content-Type'] = 'application/json';
   }
 
   let res: Response;
@@ -36,7 +41,7 @@ async function request<T>(method: string, path: string, options: { params?: Quer
     res = await fetch(buildUrl(path, options.params), {
       method,
       headers,
-      body: options.body === undefined ? undefined : JSON.stringify(options.body),
+      body: options.form ?? (options.body === undefined ? undefined : JSON.stringify(options.body)),
       credentials: 'same-origin',
       signal: options.signal,
     });
@@ -71,4 +76,13 @@ export function apiPost<T>(path: string, body: unknown = {}): Promise<T> {
 
 export function apiPatch<T>(path: string, body: unknown): Promise<T> {
   return request<T>('PATCH', path, { body });
+}
+
+export function apiDelete<T = void>(path: string): Promise<T> {
+  return request<T>('DELETE', path);
+}
+
+/** Multipart upload (photos). */
+export function apiUpload<T>(path: string, form: FormData): Promise<T> {
+  return request<T>('POST', path, { form });
 }

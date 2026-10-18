@@ -56,6 +56,10 @@ export interface Inspection {
   agency: string | null;
   status: FunctionalStatus | null;
   notes: string | null;
+  state: InspectionState;
+  inspector: string | null;
+  isFieldInspection: boolean;
+  photoCount: number;
 }
 
 export interface Intervention {
@@ -84,6 +88,7 @@ export interface SourceDetail {
   statusReason: string | null;
   verification: Verification;
   region: string;
+  regionId: number;
   regionCode: string;
   district: string | null;
   settlement: string | null;
@@ -180,6 +185,7 @@ export interface Reference {
   statuses: FunctionalStatus[];
   sections: { id: string; label: string }[];
   fields: FieldDef[];
+  inspectionFields: string[];
   roles: { code: Role; label: string; regionScoped: boolean }[];
   departments: { code: string; label: string; approves: SourceType[] }[];
 }
@@ -194,7 +200,16 @@ export type Role =
   | 'maintenance_officer'
   | 'viewer';
 
-export type Permission = 'sources.view' | 'sources.propose' | 'sources.approve' | 'quality.view' | 'users.manage' | 'audit.view';
+export type Permission =
+  | 'sources.view'
+  | 'sources.propose'
+  | 'sources.approve'
+  | 'quality.view'
+  | 'users.manage'
+  | 'audit.view'
+  | 'inspections.assign'
+  | 'inspections.submit'
+  | 'inspections.review';
 
 export interface Me {
   user: {
@@ -357,4 +372,90 @@ export interface QualityReport {
     code: string | null;
     name: string | null;
   }[];
+}
+
+export type InspectionState = 'draft' | 'submitted' | 'approved' | 'returned';
+
+export interface Assignment {
+  id: string;
+  status: 'open' | 'submitted' | 'completed' | 'cancelled';
+  dueOn: string | null;
+  notes: string | null;
+  createdAt: string;
+  assignedBy: string | null;
+  assignedTo: string | null;
+  sourceId: string;
+  code: string;
+  name: string;
+  type: SourceType;
+  settlement: string | null;
+  district: string | null;
+  region: string;
+  lat: number;
+  lng: number;
+  /** Current approved values of the inspection fields (for filling in offline) */
+  current: Record<string, FieldValue>;
+  inspectionId: string | null;
+  inspectionState: InspectionState | null;
+  reviewComment: string | null;
+}
+
+export interface InspectionListItem {
+  id: string;
+  state: InspectionState;
+  inspectedOn: string;
+  submittedAt: string | null;
+  reviewedAt: string | null;
+  inspector: string | null;
+  reviewer: string | null;
+  sourceId: string;
+  code: string;
+  name: string;
+  type: SourceType;
+  region: string;
+  photoCount: number;
+  distanceM: number | null;
+}
+
+export interface InspectionDetail {
+  id: string;
+  state: InspectionState;
+  inspectedOn: string;
+  notes: string | null;
+  observed: Record<string, FieldValue> | null;
+  previous: SourceValues | null;
+  submittedAt: string | null;
+  reviewedAt: string | null;
+  reviewComment: string | null;
+  locationMoved: boolean;
+  gpsAccuracyM: number | null;
+  gpsLat: number | null;
+  gpsLng: number | null;
+  distanceM: number | null;
+  assignmentId: string | null;
+  inspectorId: string;
+  inspector: string | null;
+  reviewer: string | null;
+  sourceId: string;
+  code: string;
+  name: string;
+  type: SourceType;
+  regionId: number;
+  region: string;
+  sourceLat: number;
+  sourceLng: number;
+  current: Record<string, FieldValue> | null;
+  photos: { id: string; caption: string | null; url: string }[];
+  warnings: { field: string; message: string }[];
+  canReview: boolean;
+  reviewBlockedReason: string | null;
+  canEdit: boolean;
+}
+
+export interface Inspector {
+  id: string;
+  fullName: string;
+  role: Role;
+  region: string | null;
+  openAssignments: number;
 }

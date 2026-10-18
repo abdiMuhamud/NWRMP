@@ -1,6 +1,8 @@
-import { ArrowLeft, CalendarCheck, Clock, Info, MapPin, Pencil, Wrench } from 'lucide-react';
+import { ArrowLeft, CalendarCheck, ClipboardPen, ClipboardPlus, Clock, Images, Info, MapPin, Pencil, Wrench } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router';
+import { AssignDialog } from '../components/inspections/AssignDialog';
+import { InspectionStateBadge } from '../components/inspections/InspectionStateBadge';
 import { WaterMap } from '../components/map/WaterMap';
 import { SeverityBadge, StatusBadge, TypeLabel, TypeSwatch, VerificationBadge } from '../components/ui/Badges';
 import { Card } from '../components/ui/Card';
@@ -58,6 +60,7 @@ function SourceRecord({ s }: { s: Detail }) {
   const { can } = useAuth();
   const pending = usePendingChangesForSource(s.id);
   const pendingRequest = pending.data?.[0];
+  const [assignOpen, setAssignOpen] = useState(false);
   const [radiusKm, setRadiusKm] = useState(25);
   const nearby = useNearby(s.id, radiusKm);
   const lastInspection = s.inspections[0];
@@ -120,14 +123,33 @@ function SourceRecord({ s }: { s: Detail }) {
           <div className="flex flex-col items-start gap-2 sm:items-end">
             <StatusBadge status={s.status} />
             <VerificationBadge value={s.verification} />
-            {can('sources.propose') && !pendingRequest && pending.isSuccess && (
-              <Link
-                to={`/sources/${s.id}/edit`}
-                className="mt-1 inline-flex h-9 items-center gap-2 rounded-lg border border-line-strong bg-surface px-3 text-sm font-medium text-ink hover:bg-page"
-              >
-                <Pencil size={14} aria-hidden /> Propose changes
-              </Link>
-            )}
+            <div className="mt-1 flex flex-wrap gap-2 sm:justify-end">
+              {can('inspections.submit') && (
+                <Link
+                  to={`/field/inspect/${s.id}`}
+                  className="inline-flex h-9 items-center gap-2 rounded-lg bg-brand-700 px-3 text-sm font-medium text-white hover:bg-brand-800"
+                >
+                  <ClipboardPen size={14} aria-hidden /> Inspect now
+                </Link>
+              )}
+              {can('inspections.assign') && (
+                <button
+                  type="button"
+                  onClick={() => setAssignOpen(true)}
+                  className="inline-flex h-9 items-center gap-2 rounded-lg border border-line-strong bg-surface px-3 text-sm font-medium text-ink hover:bg-page"
+                >
+                  <ClipboardPlus size={14} aria-hidden /> Assign inspection
+                </button>
+              )}
+              {can('sources.propose') && !pendingRequest && pending.isSuccess && (
+                <Link
+                  to={`/sources/${s.id}/edit`}
+                  className="inline-flex h-9 items-center gap-2 rounded-lg border border-line-strong bg-surface px-3 text-sm font-medium text-ink hover:bg-page"
+                >
+                  <Pencil size={14} aria-hidden /> Propose changes
+                </Link>
+              )}
+            </div>
           </div>
         </div>
         <div className="grid grid-cols-2 border-t border-line text-sm sm:grid-cols-4">
@@ -309,13 +331,24 @@ function SourceRecord({ s }: { s: Detail }) {
                     <div className="flex items-center gap-1.5 text-sm font-medium text-ink">
                       <CalendarCheck size={14} className="text-ink-3" aria-hidden /> {formatDate(i.inspectedOn)}
                     </div>
-                    <div className="mt-0.5 text-xs text-ink-2">{i.agency ?? 'Agency not recorded'}</div>
-                    {i.status && (
-                      <div className="mt-1.5">
-                        <StatusBadge status={i.status} size="sm" />
-                      </div>
-                    )}
+                    <div className="mt-0.5 text-xs text-ink-2">
+                      {i.isFieldInspection ? `Field visit by ${i.inspector ?? 'inspector'}` : i.agency ?? 'Agency not recorded'}
+                      {i.photoCount > 0 && (
+                        <span className="ml-2 inline-flex items-center gap-1 text-ink-3">
+                          <Images size={12} aria-hidden /> {i.photoCount}
+                        </span>
+                      )}
+                    </div>
+                    <div className="mt-1.5 flex flex-wrap gap-1.5">
+                      {i.status && <StatusBadge status={i.status} size="sm" />}
+                      {i.isFieldInspection && i.state !== 'approved' && <InspectionStateBadge state={i.state} size="sm" />}
+                    </div>
                     {i.notes && <p className="mt-1 text-xs text-ink-3">{i.notes}</p>}
+                    {i.isFieldInspection && (
+                      <Link to={`/inspections/${i.id}`} className="mt-1 block text-xs font-medium text-brand-700 hover:underline">
+                        View inspection
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ol>
@@ -323,6 +356,7 @@ function SourceRecord({ s }: { s: Detail }) {
           </Card>
 
           <SourceHistory source={s} />
+          {assignOpen && <AssignDialog open onClose={() => setAssignOpen(false)} source={{ id: s.id, name: s.name, regionId: s.regionId }} />}
 
           <Card title="Repairs and interventions" bodyClassName="px-5 py-4">
             {s.interventions.length === 0 ? (

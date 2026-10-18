@@ -1,12 +1,14 @@
-import { ChevronDown, LogOut, UserRound } from 'lucide-react';
+import { ChevronDown, Download, LogOut, UserRound } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { useAuth } from '../../lib/auth';
+import { useInstallPrompt } from '../../lib/pwa';
 
 export function UserMenu() {
   const { me, signOut } = useAuth();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const installPrompt = useInstallPrompt();
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -58,6 +60,19 @@ export function UserMenu() {
           <Link role="menuitem" to="/account" onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-ink hover:bg-page">
             <UserRound size={16} className="text-ink-3" aria-hidden /> My account
           </Link>
+          {installPrompt.available && (
+            <button
+              role="menuitem"
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                void installPrompt.install();
+              }}
+              className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-ink hover:bg-page"
+            >
+              <Download size={16} className="text-ink-3" aria-hidden /> Install app on this device
+            </button>
+          )}
           <button
             role="menuitem"
             type="button"
