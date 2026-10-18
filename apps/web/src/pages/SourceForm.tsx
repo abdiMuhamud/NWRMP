@@ -1,10 +1,11 @@
 import { ArrowLeft, Info, Send } from 'lucide-react';
-import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { LocationPicker } from '../components/map/LocationPicker';
 import { TypeSwatch } from '../components/ui/Badges';
 import { Card } from '../components/ui/Card';
-import { Button, Field, borderFor, inputClass } from '../components/ui/Controls';
+import { FieldInput } from '../components/form/FieldInput';
+import { Button, borderFor, inputClass } from '../components/ui/Controls';
 import { PageHeader } from '../components/ui/PageHeader';
 import { ErrorState, LoadingBlock } from '../components/ui/States';
 import { useToast } from '../components/ui/Toast';
@@ -144,97 +145,20 @@ function SourceFormBody({ source }: { source: SourceDetail | null }) {
     }
   };
 
-  const renderField = (def: FieldDef, value: string, onChange: (v: string) => void, errorKey: string) => {
-    const id = `f-${errorKey}`;
-    const error = errors[errorKey];
-    const describedBy = error ? `${id}-error` : def.help ? `${id}-hint` : undefined;
-    const common = { id, 'aria-invalid': Boolean(error) || undefined, 'aria-describedby': describedBy };
-    const label = def.unit ? `${def.label} (${def.unit})` : def.label;
-    let control: ReactNode;
-
-    switch (def.kind) {
-      case 'select':
-        control = (
-          <select {...common} value={value} onChange={(e) => onChange(e.target.value)} className={`${inputClass} ${borderFor(error)}`}>
-            {!def.required && <option value="">Not recorded</option>}
-            {def.options?.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-        );
-        break;
-      case 'region':
-        control = (
-          <select
-            {...common}
-            value={value}
-            disabled={Boolean(scopeRegionId)}
-            onChange={(e) => onChange(e.target.value)}
-            className={`${inputClass} ${borderFor(error)}`}
-          >
-            <option value="">Choose a region</option>
-            {reference.regions.map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.name}
-              </option>
-            ))}
-          </select>
-        );
-        break;
-      case 'boolean':
-        control = (
-          <select {...common} value={value} onChange={(e) => onChange(e.target.value)} className={`${inputClass} ${borderFor(error)}`}>
-            <option value="">Not recorded</option>
-            <option value="true">Yes</option>
-            <option value="false">No</option>
-          </select>
-        );
-        break;
-      case 'textarea':
-        control = (
-          <textarea
-            {...common}
-            rows={3}
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            className={`${inputClass} ${borderFor(error)} h-auto py-2`}
-          />
-        );
-        break;
-      default: {
-        const listId = def.suggestions?.length || def.key === 'district' ? `${id}-list` : undefined;
-        const suggestions = def.key === 'district' ? districts.map((d) => d.name) : def.suggestions;
-        control = (
-          <>
-            <input
-              {...common}
-              type={def.kind === 'date' ? 'date' : 'text'}
-              inputMode={def.kind === 'number' ? 'decimal' : def.kind === 'integer' ? 'numeric' : undefined}
-              list={listId}
-              value={value}
-              onChange={(e) => onChange(e.target.value)}
-              className={`${inputClass} ${borderFor(error)}`}
-            />
-            {listId && (
-              <datalist id={listId}>
-                {suggestions?.map((s) => (
-                  <option key={s} value={s} />
-                ))}
-              </datalist>
-            )}
-          </>
-        );
-      }
-    }
-
-    return (
-      <Field key={errorKey} label={label} htmlFor={id} required={def.required} error={error} hint={def.help} className={def.kind === 'textarea' ? 'sm:col-span-2 xl:col-span-3' : ''}>
-        {control}
-      </Field>
-    );
-  };
+  const renderField = (def: FieldDef, value: string, onChange: (v: string) => void, errorKey: string) => (
+    <FieldInput
+      key={errorKey}
+      def={def}
+      name={errorKey}
+      value={value}
+      onChange={onChange}
+      error={errors[errorKey]}
+      regions={reference.regions}
+      disabled={def.kind === 'region' && Boolean(scopeRegionId)}
+      suggestions={def.key === 'district' ? districts.map((d) => d.name) : undefined}
+      className={def.kind === 'textarea' ? 'sm:col-span-2 xl:col-span-3' : ''}
+    />
+  );
 
   const sectionFields = (sectionId: string) => reference.fields.filter((f) => f.section === sectionId && f.key !== 'lat' && f.key !== 'lng');
 

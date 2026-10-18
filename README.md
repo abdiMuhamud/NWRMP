@@ -3,7 +3,11 @@
 Digital platform of the **Ministry of Water Development** (Wasaaradda Horumarinta Biyaha) for registering,
 mapping and monitoring the country's water sources: boreholes, shallow wells, berkads, dams and springs.
 
-This repository holds **Phase 1 — Registry & GIS** and **Sprint A — users and control**:
+This repository holds **Phase 1 — Registry & GIS**, **Sprint A — users and control** and **Sprint B — field collection**:
+
+- **Field inspections**: coordinators assign visits; field officers fill a phone form (GPS, photos) that works offline;
+  coordinators approve or return; approval updates the record and marks it verified in the field.
+- **Installable app**: add NWRMP to a phone's home screen; the app and viewed map areas load without signal.
 
 - **Sign-in, roles and region limits**: seven roles mapped to the Ministry's departments; regional staff see only their region.
 - **Approval workflow**: every new source and every edit is a request that the responsible department approves or rejects.
@@ -110,6 +114,20 @@ To set up the projects from scratch, the repository deploys as **two Vercel proj
 5. **Web project**: *Add New → Project*, same repo, **Root Directory** `apps/web` (framework: Vite).
    `apps/web/vercel.json` forwards `/api/*` to the API project, so the web app and API share one origin and the
    session cookie works. If your API project has a different URL, change the rewrite destination there.
+
+## Field inspections (Sprint B)
+
+1. A regional coordinator (or HQ) opens **Inspections → Assign inspections**, picks a field officer in the region,
+   the sources (least recently inspected first) and a due date.
+2. The field officer opens **My inspections** on a phone. Each form starts from the last approved values. They record
+   the visit, take a GPS position and photos, and send. Without signal the inspection (photos included) is saved on the
+   phone and sent automatically when the connection returns; resends never create duplicates.
+3. The coordinator reviews: values found vs registered, photos, GPS distance from the registered point. **Approve**
+   updates the record (optionally moving it to the GPS position) and marks it verified; **Return** sends it back with
+   a comment for correction.
+
+Photos are compressed on the phone (about 1600 px) and stored privately: Vercel Blob (private store) online, the
+`uploads/` folder locally. They are only ever served through the API to signed-in users who can see the source.
 
 ## Data import
 

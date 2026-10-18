@@ -1,6 +1,7 @@
 import {
   ClipboardCheck,
   ClipboardList,
+  ClipboardPen,
   Droplets,
   FileBarChart,
   FlaskConical,
@@ -23,8 +24,10 @@ export interface NavItem {
   soon?: boolean;
   /** Hidden unless the signed-in user holds this permission */
   permission?: Permission;
-  /** Shows the number of requests waiting for the user's review */
-  badge?: 'approvals';
+  /** Hidden unless the user holds at least one of these */
+  anyPermission?: Permission[];
+  /** Count shown next to the item */
+  badge?: 'approvals' | 'inspections' | 'assignments';
 }
 
 export interface NavGroup {
@@ -51,7 +54,8 @@ export const NAV: NavGroup[] = [
   {
     label: 'Operations',
     items: [
-      { to: '/planned/inspections', label: 'Inspections', icon: ClipboardList, soon: true },
+      { to: '/field', label: 'My inspections', icon: ClipboardPen, permission: 'inspections.submit', badge: 'assignments' },
+      { to: '/inspections', label: 'Inspections', icon: ClipboardList, anyPermission: ['inspections.assign', 'inspections.review'], badge: 'inspections' },
       { to: '/planned/water-quality', label: 'Water quality', icon: FlaskConical, soon: true },
       { to: '/planned/maintenance', label: 'Maintenance', icon: Wrench, soon: true },
       { to: '/planned/reports', label: 'Reports', icon: FileBarChart, soon: true },

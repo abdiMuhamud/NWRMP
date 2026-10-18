@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Outlet, ScrollRestoration, useLocation } from 'react-router';
 import { RequireAuth } from '../../lib/auth';
+import { OutboxSync } from './OutboxSync';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 
@@ -31,6 +32,7 @@ export function AppShell() {
           </main>
         </div>
         <ScrollRestoration />
+        <OutboxSync />
       </div>
     </RequireAuth>
   );

@@ -48,6 +48,7 @@ function HistoryItem({ entry, source }: { entry: HistoryEntry; source: SourceDet
   const proposed = entry.changes?.proposed;
   const rows = proposed ? changeRows(reference.data, source.type, proposed, entry.changes?.previous ?? null) : [];
   const isCreate = entry.action === 'source.create';
+  const inspectionId = (entry.changes as { inspectionId?: string } | null)?.inspectionId;
 
   return (
     <li className="relative">
@@ -55,7 +56,7 @@ function HistoryItem({ entry, source }: { entry: HistoryEntry; source: SourceDet
       <div className="text-sm font-medium text-ink">{isCreate ? 'Registered' : entry.summary}</div>
       <div className="text-xs text-ink-2">
         Approved by {entry.userName ?? 'unknown'} · {formatDate(entry.at)}
-        {entry.changes?.requestedBy && <> · proposed by {entry.changes.requestedBy}</>}
+        {entry.changes?.requestedBy && <> · {inspectionId ? 'inspected' : 'proposed'} by {entry.changes.requestedBy}</>}
       </div>
       {!isCreate && rows.length > 0 && (
         <>
@@ -80,6 +81,11 @@ function HistoryItem({ entry, source }: { entry: HistoryEntry; source: SourceDet
             </ul>
           )}
         </>
+      )}
+      {inspectionId && (
+        <Link to={`/inspections/${inspectionId}`} className="mt-1 block text-xs text-ink-3 hover:text-brand-700 hover:underline">
+          View inspection
+        </Link>
       )}
       {entry.changes?.requestId && (
         <Link to={`/approvals/${entry.changes.requestId}`} className="mt-1 block text-xs text-ink-3 hover:text-brand-700 hover:underline">

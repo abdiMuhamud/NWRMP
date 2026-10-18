@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { createContext, useCallback, useContext, useMemo, type ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router';
 import { ApiError, apiGet, apiPost } from './api';
+import { clearOfflineData } from './offline';
 import type { Me, Permission, SourceType } from './types';
 
 interface AuthState {
@@ -52,6 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(async () => {
     try {
       await apiPost('/auth/logout');
+      await clearOfflineData();
     } finally {
       queryClient.removeQueries({ predicate: (q) => q.queryKey[0] !== 'me' });
       queryClient.setQueryData(['me'], null);

@@ -16,7 +16,7 @@ const SORT_COLUMNS: Record<SourceSort, string> = {
 
 const LAST_INSPECTION = `
   LEFT JOIN LATERAL (
-    SELECT max(i.inspected_on) AS inspected_on FROM inspections i WHERE i.source_id = s.id
+    SELECT max(i.inspected_on) AS inspected_on FROM inspections i WHERE i.source_id = s.id AND i.state = 'approved'
   ) li ON true`;
 
 @Injectable()
@@ -82,8 +82,12 @@ export class SourcesService {
 
     const [inspections, interventions, issues] = await Promise.all([
       this.db.query(
-        `SELECT id, inspected_on::text AS "inspectedOn", agency, status, notes
-           FROM inspections WHERE source_id = $1 ORDER BY inspected_on DESC`,
+        `SELECT i.id, i.inspected_on::text AS "inspectedOn", i.agency, i.status, i.notes, i.state,
+                u.full_name AS inspector, (i.inspector_id IS NOT NULL) AS "isFieldInspection",
+                (SELECT count(*) FROM inspection_photos p WHERE p.inspection_id = i.id)::int AS "photoCount"
+           FROM inspections i LEFT JOIN users u ON u.id = i.inspector_id
+          WHERE i.source_id = $1 AND i.state <> 'draft'
+          ORDER BY i.inspected_on DESC, i.created_at DESC`,
         [id],
       ),
       this.db.query(

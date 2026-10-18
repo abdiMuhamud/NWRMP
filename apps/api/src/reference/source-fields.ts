@@ -121,3 +121,29 @@ export const FIELD_BY_KEY = new Map(SOURCE_FIELDS.map((field) => [field.key, fie
 
 /** Keys that are not plain water_sources columns. */
 export const NON_COLUMN_KEYS = new Set(['district', 'lat', 'lng']);
+
+/** Registry fields collected at a field inspection (following the Ministry's survey template). */
+export const INSPECTION_FIELD_KEYS = [
+  'status',
+  'status_reason',
+  'permanence',
+  'is_protected',
+  'people_served',
+  'idps_served',
+  'camels',
+  'cattle',
+  'shoats',
+  'irrigated_ha',
+  'kiosks',
+  'animal_troughs',
+  'used_for_trucking',
+  'trucks_per_day',
+  'pump_type',
+  'power_source',
+  'supply_condition',
+  'supply_condition_notes',
+  'quality_issue',
+  'color_odor',
+  'temperature_c',
+  'ph',
+];

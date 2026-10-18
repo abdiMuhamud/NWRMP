@@ -66,7 +66,7 @@ export class StatsService {
                 s.id AS "sourceId", s.code, s.name, s.type
            FROM inspections i
            JOIN water_sources s ON s.id = i.source_id
-          ${region ? 'WHERE s.region_id = $1' : ''}
+          WHERE i.state = 'approved' ${region ? 'AND s.region_id = $1' : ''}
           ORDER BY i.inspected_on DESC
           LIMIT 6`,
         region ? [region] : [],

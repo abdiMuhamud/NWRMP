@@ -1,12 +1,15 @@
-import { FlaskRound, Menu, Search } from 'lucide-react';
+import { CloudOff, FlaskRound, Menu, Search } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { SearchInput } from '../ui/Controls';
+import { useOnline, useOutbox } from '../../lib/offline';
 import { UserMenu } from './UserMenu';
 
 export function Topbar({ onMenu }: { onMenu: () => void }) {
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
+  const online = useOnline();
+  const { items } = useOutbox();
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -40,6 +43,17 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
           <Link to="/sources" className="grid size-10 place-items-center rounded-lg text-ink-2 hover:bg-page sm:hidden" aria-label="Search water sources">
             <Search size={19} />
           </Link>
+          {(!online || items.length > 0) && (
+            <Link
+              to="/field"
+              className="inline-flex items-center gap-1.5 rounded-full bg-muted-wash px-2.5 py-1 text-xs font-medium text-muted-ink"
+              title={online ? 'Inspections waiting to be sent' : 'No connection. Work is saved on this device.'}
+            >
+              <CloudOff size={13} aria-hidden />
+              {online ? '' : 'Offline'}
+              {items.length > 0 && `${online ? '' : ' · '}${items.length} to send`}
+            </Link>
+          )}
           <span className="hidden items-center gap-1.5 rounded-full bg-gold-100 px-2.5 py-1 text-xs font-medium text-gold-800 ring-1 ring-gold-300/60 xl:inline-flex">
             <FlaskRound size={13} aria-hidden /> Test environment
           </span>

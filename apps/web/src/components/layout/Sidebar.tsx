@@ -1,7 +1,7 @@
 import { X } from 'lucide-react';
 import { NavLink } from 'react-router';
 import { useAuth } from '../../lib/auth';
-import { useChangeCounts } from '../../lib/queries';
+import { useChangeCounts, useInspectionCounts } from '../../lib/queries';
 import { SoonTag } from '../ui/Badges';
 import { NAV } from './nav';
 
@@ -31,7 +31,15 @@ export function Brand() {
 export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { can, me } = useAuth();
   const counts = useChangeCounts(Boolean(me));
-  const groups = NAV.map((g) => ({ ...g, items: g.items.filter((i) => !i.permission || can(i.permission)) })).filter(
+  const inspectionCounts = useInspectionCounts(Boolean(me));
+  const badges = {
+    approvals: counts.data?.toReview ?? 0,
+    inspections: inspectionCounts.data?.toReview ?? 0,
+    assignments: (inspectionCounts.data?.openAssignments ?? 0) + (inspectionCounts.data?.returned ?? 0),
+  };
+  const visible = (i: (typeof NAV)[number]['items'][number]) =>
+    (!i.permission || can(i.permission)) && (!i.anyPermission || i.anyPermission.some((p) => can(p)));
+  const groups = NAV.map((g) => ({ ...g, items: g.items.filter(visible) })).filter(
     (g) => g.items.length > 0,
   );
 
@@ -98,12 +106,12 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
                           <item.icon size={18} strokeWidth={isActive ? 2.25 : 1.85} aria-hidden />
                           <span className="flex-1">{item.label}</span>
                           {item.soon && <SoonTag />}
-                          {item.badge === 'approvals' && (counts.data?.toReview ?? 0) > 0 && (
+                          {item.badge && badges[item.badge] > 0 && (
                             <span
                               className="min-w-5 rounded-full bg-gold-400 px-1.5 text-center text-[11px] font-semibold leading-5 text-brand-950"
-                              aria-label={`${counts.data?.toReview} waiting for your review`}
+                              aria-label={`${badges[item.badge]} waiting for you`}
                             >
-                              {counts.data?.toReview}
+                              {badges[item.badge]}
                             </span>
                           )}
                         </>
