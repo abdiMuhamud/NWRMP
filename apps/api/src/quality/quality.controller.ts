@@ -1,5 +1,7 @@
 import { Controller, Get, Inject, Query } from '@nestjs/common';
 import { IsIn, IsOptional } from 'class-validator';
+import { CurrentUser, RequirePermission } from '../auth/decorators';
+import { regionScope, type AuthUser } from '../auth/roles';
 import { validated } from '../common/validation';
 import { DB, type Db } from '../database/db';
 
@@ -11,13 +13,20 @@ class IssuesQuery {
 
 /** Problems found while importing spreadsheets, for data officers to review and correct. */
 @Controller('data-quality')
+@RequirePermission('quality.view')
 export class QualityController {
   constructor(@Inject(DB) private readonly db: Db) {}
 
   @Get()
-  async issues(@Query(validated(IssuesQuery)) query: IssuesQuery) {
-    const severityFilter = query.severity ? 'WHERE i.severity = $1' : '';
-    const params = query.severity ? [query.severity] : [];
+  async issues(@CurrentUser() user: AuthUser, @Query(validated(IssuesQuery)) query: IssuesQuery) {
+    // Regional users see only issues on sources in their region.
+    const scope = regionScope(user);
+    const params: unknown[] = [];
+    const clauses: string[] = [];
+    if (query.severity) clauses.push(`i.severity = $${params.push(query.severity)}`);
+    if (scope) clauses.push(`i.source_id IN (SELECT id FROM water_sources WHERE region_id = $${params.push(scope)})`);
+    const severityFilter = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
+    const scopeFilter = scope ? `WHERE source_id IN (SELECT id FROM water_sources WHERE region_id = ${Number(scope)})` : '';
 
     const [totals, byMessage, items] = await Promise.all([
       this.db.query(
@@ -25,7 +34,7 @@ export class QualityController {
                 count(*) FILTER (WHERE severity = 'warning')::int AS warning,
                 count(*) FILTER (WHERE severity = 'info')::int AS info,
                 count(DISTINCT source_id)::int AS "sourcesAffected"
-           FROM import_issues`,
+           FROM import_issues ${scopeFilter}`,
       ),
       // Group similar messages ("Possible duplicate of BH-MJ-00003 ...") under one heading.
       this.db.query(

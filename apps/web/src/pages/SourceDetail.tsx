@@ -1,4 +1,4 @@
-import { ArrowLeft, CalendarCheck, Info, MapPin, Wrench } from 'lucide-react';
+import { ArrowLeft, CalendarCheck, Clock, Info, MapPin, Pencil, Wrench } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { WaterMap } from '../components/map/WaterMap';
@@ -7,9 +7,11 @@ import { Card } from '../components/ui/Card';
 import { Select } from '../components/ui/Controls';
 import { FactList, type Fact } from '../components/ui/FactList';
 import { EmptyState, ErrorState, LoadingBlock, Skeleton } from '../components/ui/States';
+import { SourceHistory } from '../components/SourceHistory';
+import { useAuth } from '../lib/auth';
 import { STATUS_META, TYPE_META } from '../lib/domain';
 import { formatBoolean, formatDate, formatMeasure, formatNumber } from '../lib/format';
-import { useNearby, useReference, useSource } from '../lib/queries';
+import { useNearby, usePendingChangesForSource, useReference, useSource } from '../lib/queries';
 import type { SourceCollection, SourceDetail as Detail, SourceFeature } from '../lib/types';
 
 export function SourceDetail() {
@@ -53,6 +55,9 @@ function BackLink() {
 
 function SourceRecord({ s }: { s: Detail }) {
   const reference = useReference();
+  const { can } = useAuth();
+  const pending = usePendingChangesForSource(s.id);
+  const pendingRequest = pending.data?.[0];
   const [radiusKm, setRadiusKm] = useState(25);
   const nearby = useNearby(s.id, radiusKm);
   const lastInspection = s.inspections[0];
@@ -115,6 +120,14 @@ function SourceRecord({ s }: { s: Detail }) {
           <div className="flex flex-col items-start gap-2 sm:items-end">
             <StatusBadge status={s.status} />
             <VerificationBadge value={s.verification} />
+            {can('sources.propose') && !pendingRequest && pending.isSuccess && (
+              <Link
+                to={`/sources/${s.id}/edit`}
+                className="mt-1 inline-flex h-9 items-center gap-2 rounded-lg border border-line-strong bg-surface px-3 text-sm font-medium text-ink hover:bg-page"
+              >
+                <Pencil size={14} aria-hidden /> Propose changes
+              </Link>
+            )}
           </div>
         </div>
         <div className="grid grid-cols-2 border-t border-line text-sm sm:grid-cols-4">
@@ -124,6 +137,21 @@ function SourceRecord({ s }: { s: Detail }) {
           <HeaderStat label="Protected" value={formatBoolean(s.isProtected)} />
         </div>
       </section>
+
+      {pendingRequest && (
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gold-300/70 bg-gold-100/60 px-4 py-3 text-sm text-gold-800">
+          <p className="flex gap-2.5">
+            <Clock size={18} className="mt-0.5 shrink-0" aria-hidden />
+            <span>
+              <span className="font-semibold">A change is waiting for review</span>, submitted by {pendingRequest.requestedBy} on{' '}
+              {formatDate(pendingRequest.requestedAt)}. The values below are the current approved record.
+            </span>
+          </p>
+          <Link to={`/approvals/${pendingRequest.id}`} className="font-medium underline underline-offset-2 hover:no-underline">
+            View request
+          </Link>
+        </div>
+      )}
 
       {s.status !== 'functioning' && s.statusReason && (
         <div className="mb-6 flex gap-3 rounded-xl border px-4 py-3 text-sm" style={{ background: STATUS_META[s.status].wash, borderColor: STATUS_META[s.status].wash, color: STATUS_META[s.status].ink }}>
@@ -293,6 +321,8 @@ function SourceRecord({ s }: { s: Detail }) {
               </ol>
             )}
           </Card>
+
+          <SourceHistory source={s} />
 
           <Card title="Repairs and interventions" bodyClassName="px-5 py-4">
             {s.interventions.length === 0 ? (

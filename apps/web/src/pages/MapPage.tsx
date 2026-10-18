@@ -6,12 +6,14 @@ import { TypeSwatch } from '../components/ui/Badges';
 import { Segmented, Select } from '../components/ui/Controls';
 import { SOURCE_TYPES, STATUSES, STATUS_META, TYPE_META } from '../lib/domain';
 import { formatNumber } from '../lib/format';
+import { useAuth } from '../lib/auth';
 import { useReference, useSourceGeojson } from '../lib/queries';
 import type { FunctionalStatus, SourceType } from '../lib/types';
 
 export function MapPage() {
   const [params, setParams] = useSearchParams();
-  const region = Number(params.get('region')) || undefined;
+  const { scopeRegionId } = useAuth();
+  const region = scopeRegionId ?? (Number(params.get('region')) || undefined);
   const reference = useReference();
   const geojson = useSourceGeojson({ region });
 
@@ -73,14 +75,14 @@ export function MapPage() {
           </header>
 
           <div className="space-y-5 overflow-y-auto px-4 py-4">
-            <Select label="Region" value={region ?? ''} onChange={(v) => setParams(v ? { region: v } : {})}>
+            {!scopeRegionId && <Select label="Region" value={region ?? ''} onChange={(v) => setParams(v ? { region: v } : {})}>
               <option value="">All regions</option>
               {reference.data?.regions.map((r) => (
                 <option key={r.id} value={r.id}>
                   {r.name}
                 </option>
               ))}
-            </Select>
+            </Select>}
 
             <div>
               <div className="mb-2 flex items-center justify-between">

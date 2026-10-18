@@ -68,14 +68,15 @@ export class SourcesService {
     };
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, scope: number | null) {
     const [row] = await this.db.query<{ source: Record<string, unknown> } & Record<string, unknown>>(
       `SELECT to_jsonb(s) - 'location' AS source,
               ST_Y(s.location::geometry) AS lat, ST_X(s.location::geometry) AS lng,
-              r.name AS region, r.code AS "regionCode", d.name AS district
+              r.name AS region, r.code AS "regionCode", d.name AS district, u.full_name AS "updatedByName"
        ${SOURCE_FROM}
-       WHERE s.id = $1`,
-      [id],
+       LEFT JOIN users u ON u.id = s.updated_by
+       WHERE s.id = $1 AND ($2::smallint IS NULL OR s.region_id = $2)`,
+      [id, scope],
     );
     if (!row) throw new NotFoundException('Water source not found');
 
@@ -102,18 +103,23 @@ export class SourcesService {
     return { ...camelize(source), ...rest, inspections, interventions, issues };
   }
 
-  async nearby(id: string, radiusKm: number) {
-    const [exists] = await this.db.query('SELECT 1 FROM water_sources WHERE id = $1', [id]);
-    if (!exists) throw new NotFoundException('Water source not found');
-
+  async nearby(id: string, radiusKm: number, scope: number | null) {
+    await this.assertVisible(id, scope);
     return this.db.query(
       `SELECT s.id, s.code, s.name, s.type, s.status,
               ST_Distance(s.location, o.location) / 1000 AS "distanceKm"
          FROM water_sources s, (SELECT location FROM water_sources WHERE id = $1) o
         WHERE s.id <> $1 AND ST_DWithin(s.location, o.location, $2)
+          AND ($3::smallint IS NULL OR s.region_id = $3)
         ORDER BY "distanceKm"
         LIMIT 20`,
-      [id, radiusKm * 1000],
+      [id, radiusKm * 1000, scope],
     );
+  }
+
+  /** 404 unless the source exists and is inside the user's region (when they have one). */
+  async assertVisible(id: string, scope: number | null) {
+    const [row] = await this.db.query('SELECT 1 FROM water_sources WHERE id = $1 AND ($2::smallint IS NULL OR region_id = $2)', [id, scope]);
+    if (!row) throw new NotFoundException('Water source not found');
   }
 }

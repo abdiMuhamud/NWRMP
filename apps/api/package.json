@@ -10,7 +10,10 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "db:migrate": "tsx scripts/migrate.ts",
     "db:seed": "tsx scripts/seed.ts",
-    "db:reset": "tsx scripts/seed.ts --reset"
+    "db:reset": "tsx scripts/seed.ts --reset",
+    "users:demo": "tsx scripts/users.ts demo",
+    "users:create": "tsx scripts/users.ts create",
+    "users:import": "tsx scripts/users.ts import"
   },
   "dependencies": {
     "@nestjs/common": "^11.2.7",

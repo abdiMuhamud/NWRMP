@@ -21,3 +21,7 @@ Thumbs.db
 
 # Personal Claude Code settings
 .claude/settings.local.json
+
+# Generated sign-in details for demo accounts
+*.local.txt
+*.local.csv

@@ -1,5 +1,7 @@
 import { X } from 'lucide-react';
 import { NavLink } from 'react-router';
+import { useAuth } from '../../lib/auth';
+import { useChangeCounts } from '../../lib/queries';
 import { SoonTag } from '../ui/Badges';
 import { NAV } from './nav';
 
@@ -27,6 +29,12 @@ export function Brand() {
 }
 
 export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { can, me } = useAuth();
+  const counts = useChangeCounts(Boolean(me));
+  const groups = NAV.map((g) => ({ ...g, items: g.items.filter((i) => !i.permission || can(i.permission)) })).filter(
+    (g) => g.items.length > 0,
+  );
+
   return (
     <>
       {/* Mobile overlay */}
@@ -62,7 +70,7 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
         </div>
 
         <nav className="flex-1 overflow-y-auto px-3 pb-6 [scrollbar-color:rgb(255_255_255/0.2)_transparent] [scrollbar-width:thin]">
-          {NAV.map((group) => (
+          {groups.map((group) => (
             <div key={group.label} className="mt-5">
               <div className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-brand-300/80">
                 {group.label}
@@ -90,6 +98,14 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
                           <item.icon size={18} strokeWidth={isActive ? 2.25 : 1.85} aria-hidden />
                           <span className="flex-1">{item.label}</span>
                           {item.soon && <SoonTag />}
+                          {item.badge === 'approvals' && (counts.data?.toReview ?? 0) > 0 && (
+                            <span
+                              className="min-w-5 rounded-full bg-gold-400 px-1.5 text-center text-[11px] font-semibold leading-5 text-brand-950"
+                              aria-label={`${counts.data?.toReview} waiting for your review`}
+                            >
+                              {counts.data?.toReview}
+                            </span>
+                          )}
                         </>
                       )}
                     </NavLink>

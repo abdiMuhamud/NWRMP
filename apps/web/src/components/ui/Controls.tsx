@@ -110,3 +110,49 @@ export function Button({
     </button>
   );
 }
+
+export const inputClass =
+  'h-10 w-full rounded-lg border bg-surface px-3 text-sm text-ink placeholder:text-ink-3 transition hover:border-ink-3 focus:border-brand-600 focus:outline-none focus:ring-3 focus:ring-brand-600/15 disabled:bg-page disabled:text-ink-3';
+
+interface FieldProps {
+  label: string;
+  htmlFor: string;
+  error?: string;
+  hint?: ReactNode;
+  required?: boolean;
+  children: ReactNode;
+  className?: string;
+}
+
+/** Label, control, hint and error message, linked for screen readers. */
+export function Field({ label, htmlFor, error, hint, required, children, className = '' }: FieldProps) {
+  return (
+    <div className={`flex min-w-0 flex-col gap-1 ${className}`}>
+      <label htmlFor={htmlFor} className="text-xs font-medium text-ink-2">
+        {label}
+        {required && (
+          <span className="text-critical-ink" aria-hidden>
+            {' '}
+            *
+          </span>
+        )}
+      </label>
+      {children}
+      {error ? (
+        <p id={`${htmlFor}-error`} className="text-xs text-critical-ink">
+          {error}
+        </p>
+      ) : (
+        hint && (
+          <p id={`${htmlFor}-hint`} className="text-xs text-ink-3">
+            {hint}
+          </p>
+        )
+      )}
+    </div>
+  );
+}
+
+export function borderFor(error?: string) {
+  return error ? 'border-critical' : 'border-line-strong';
+}

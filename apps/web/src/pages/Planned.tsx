@@ -57,16 +57,6 @@ const PLANNED: Record<string, { phase: string; summary: string; features: string
       'Same forms on the web and the mobile app',
     ],
   },
-  users: {
-    phase: 'Next sprint',
-    summary: 'Sign-in for Ministry staff and partners, with each person limited to the data their role allows.',
-    features: [
-      'Single sign-on (OIDC) hosted on government infrastructure',
-      'Roles for headquarters, departments, regional offices and partners',
-      'Access limited by region',
-      'Audit log of every change',
-    ],
-  },
   mobile: {
     phase: 'Phase 5',
     summary: 'An Android app for field teams that works without a connection and syncs when back in coverage.',

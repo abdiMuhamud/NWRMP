@@ -6,6 +6,8 @@ import {
   type FunctionalStatus,
   type SourceType,
 } from '../reference/source-types';
+import { codePrefix, formatCode } from '../sources/codes';
+import { findInconsistencies } from '../sources/consistency';
 import { FIELD_MAP, normalizeHeader, type Special, type Target } from './field-map';
 import {
   isBlank,
@@ -367,18 +369,11 @@ function derivePermanence(special: RowRecord['special'], note: Note): 'permanent
 }
 
 function checkConsistency(v: Record<string, unknown>, note: Note) {
-  const n = (key: string) => (typeof v[key] === 'number' ? (v[key] as number) : null);
-
-  if (!v.generator_type && (n('generator_kva') ?? 0) > 0) {
-    note('warning', 'generator_capacity', 'Generator capacity recorded but generator type is "None"', `${v.generator_kva} kVA`);
+  for (const issue of findInconsistencies(v)) {
+    const value = v[issue.field];
+    note('warning', issue.field, issue.message, value === null || value === undefined ? null : String(value));
   }
-  if (!v.solar_type && (n('solar_kw') ?? 0) > 0) {
-    note('warning', 'solar_capacity', 'Solar capacity recorded but solar type is "None"', `${v.solar_kw} kW`);
-  }
-  if (v.used_for_trucking === false && (n('trucks_per_day') ?? 0) > 0) {
-    note('warning', 'number_of_trucks_per_day', 'Not used for water trucking, but trucks per day is recorded', String(v.trucks_per_day));
-  }
-  const ph = n('ph');
+  const ph = typeof v.ph === 'number' ? v.ph : null;
   if (ph !== null && (ph < 0 || ph > 14)) {
     note('warning', 'ph', 'pH must be between 0 and 14; value removed', ph);
     v.ph = null;
@@ -396,10 +391,10 @@ async function loadCodeCounters(db: Db): Promise<Map<string, number>> {
 }
 
 function nextCode(counters: Map<string, number>, type: SourceType, regionCode: string): string {
-  const prefix = `${SOURCE_TYPE_DEFS[type].prefix}-${regionCode}`;
+  const prefix = codePrefix(type, regionCode);
   const n = (counters.get(prefix) ?? 0) + 1;
   counters.set(prefix, n);
-  return `${prefix}-${String(n).padStart(5, '0')}`;
+  return formatCode(prefix, n);
 }
 
 async function insertSource(db: Db, values: Record<string, unknown>, lng: number, lat: number): Promise<string> {

@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, RotateCcw } from 'lucide-react';
+import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, Plus, RotateCcw } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { StatusBadge, TypeLabel, VerificationBadge } from '../components/ui/Badges';
@@ -8,6 +8,7 @@ import { PageHeader } from '../components/ui/PageHeader';
 import { EmptyState, ErrorState, Skeleton } from '../components/ui/States';
 import { SOURCE_TYPES, STATUSES, STATUS_META, TYPE_META } from '../lib/domain';
 import { formatDate, formatNumber } from '../lib/format';
+import { useAuth } from '../lib/auth';
 import { useReference, useSources } from '../lib/queries';
 
 type SortKey = 'code' | 'name' | 'type' | 'region' | 'status' | 'people' | 'inspected';
@@ -18,6 +19,7 @@ export function Sources() {
   const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
   const reference = useReference();
+  const { can, scopeRegionId } = useAuth();
 
   const q = params.get('q') ?? '';
   const page = Math.max(1, Number(params.get('page')) || 1);
@@ -71,6 +73,13 @@ export function Sources() {
         eyebrow="Registry"
         title="Water sources"
         description="Every registered borehole, shallow well, berkad, dam and spring. Search, filter and open a record for full details."
+        actions={
+          can('sources.propose') && (
+            <Link to="/sources/new" className="inline-flex h-10 items-center gap-2 rounded-lg bg-brand-700 px-3.5 text-sm font-medium text-white shadow-card hover:bg-brand-800">
+              <Plus size={16} aria-hidden /> Register a source
+            </Link>
+          )
+        }
       />
 
       <Card bodyClassName="p-0">
@@ -90,14 +99,14 @@ export function Sources() {
               </option>
             ))}
           </Select>
-          <Select className="flex-[1_1_128px]" label="Region" value={params.get('region') ?? ''} onChange={(v) => update({ region: v })}>
+          {!scopeRegionId && <Select className="flex-[1_1_128px]" label="Region" value={params.get('region') ?? ''} onChange={(v) => update({ region: v })}>
             <option value="">All regions</option>
             {reference.data?.regions.map((r) => (
               <option key={r.id} value={r.id}>
                 {r.name}
               </option>
             ))}
-          </Select>
+          </Select>}
           <Select className="flex-[1_1_128px]" label="Status" value={params.get('status') ?? ''} onChange={(v) => update({ status: v })}>
             <option value="">Any status</option>
             {STATUSES.map((s) => (
