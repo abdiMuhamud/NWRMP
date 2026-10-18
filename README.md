@@ -62,6 +62,7 @@ Database commands (run inside `apps/api`, with the API stopped when using the em
 | `npm run db:seed -- path/to/file.xlsx` | Import another workbook in the Ministry template |
 | `npm run users:demo` | Create the demo accounts (details go to `demo-accounts.local.txt`) |
 | `npm run users:create -- --email … --name "…" --role admin` | Create one user with a temporary password |
+| `npm run users:import -- staff.local.csv` | Create many users from a CSV (`full_name,email,role,department,region`); passwords go to `staff.local.passwords.local.txt` |
 
 ## Users, roles and approvals
 
@@ -69,6 +70,7 @@ Database commands (run inside `apps/api`, with the API stopped when using the em
 |---|---|---|
 | Administrator | ICT | Everything, including users and the audit log |
 | Department reviewer | Groundwater · Shallow wells · Surface water | Approve changes for their source types; propose changes |
+| Data officer (HQ) | Regional coordination (HQ) | Register and edit sources **in every region**, which then go for approval |
 | Regional coordinator | Regional coordination | Register and edit sources **in their region**, which then go for approval |
 | Field officer | Regional staff | View their region (field collection arrives in Sprint B) |
 | Lab officer / Maintenance officer | Water quality lab / O&M | View (their modules arrive in Sprint C) |

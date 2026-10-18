@@ -187,6 +187,7 @@ export interface Reference {
 export type Role =
   | 'admin'
   | 'department_reviewer'
+  | 'data_officer'
   | 'regional_coordinator'
   | 'field_officer'
   | 'lab_officer'

@@ -24,3 +24,4 @@ Thumbs.db
 
 # Generated sign-in details for demo accounts
 *.local.txt
+*.local.csv

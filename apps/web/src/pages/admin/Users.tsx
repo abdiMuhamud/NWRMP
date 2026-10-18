@@ -227,7 +227,7 @@ function UserDialog({ user, onClose, onCreated }: { user: UserRow | null; onClos
         regionId: roleDef?.regionScoped && form.regionId ? Number(form.regionId) : null,
       };
       return user
-        ? apiPatch<UserRow>(`/users/${user.id}`, body).then(() => null)
+        ? apiPatch<UserRow>(`/users/${user.id}`, { ...body, email: form.email }).then(() => null)
         : apiPost<{ temporaryPassword: string }>('/users', { ...body, email: form.email }).then((r) => r.temporaryPassword);
     },
     onSuccess: (password) => {
@@ -265,8 +265,8 @@ function UserDialog({ user, onClose, onCreated }: { user: UserRow | null; onClos
         <Field label="Full name" htmlFor="u-name" required className="sm:col-span-2">
           <input id="u-name" value={form.fullName} onChange={(e) => set('fullName', e.target.value)} className={`${inputClass} ${borderFor()}`} />
         </Field>
-        <Field label="Email" htmlFor="u-email" required hint={user ? 'Email cannot be changed' : undefined}>
-          <input id="u-email" type="email" value={form.email} disabled={Boolean(user)} onChange={(e) => set('email', e.target.value)} className={`${inputClass} ${borderFor()}`} />
+        <Field label="Email (used to sign in)" htmlFor="u-email" required>
+          <input id="u-email" type="email" value={form.email} onChange={(e) => set('email', e.target.value)} className={`${inputClass} ${borderFor()}`} />
         </Field>
         <Field label="Phone" htmlFor="u-phone">
           <input id="u-phone" value={form.phone} onChange={(e) => set('phone', e.target.value)} className={`${inputClass} ${borderFor()}`} />

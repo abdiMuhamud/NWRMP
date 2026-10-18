@@ -3,6 +3,7 @@ import type { SourceType } from '../reference/source-types';
 export const ROLES = [
   'admin',
   'department_reviewer',
+  'data_officer',
   'regional_coordinator',
   'field_officer',
   'lab_officer',
@@ -14,6 +15,7 @@ export type Role = (typeof ROLES)[number];
 export const ROLE_LABELS: Record<Role, string> = {
   admin: 'Administrator',
   department_reviewer: 'Department reviewer',
+  data_officer: 'Data officer (HQ)',
   regional_coordinator: 'Regional coordinator',
   field_officer: 'Field officer',
   lab_officer: 'Lab officer',
@@ -58,6 +60,7 @@ export type Permission = (typeof PERMISSIONS)[number];
 const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   admin: ['sources.view', 'sources.propose', 'sources.approve', 'quality.view', 'users.manage', 'audit.view'],
   department_reviewer: ['sources.view', 'sources.propose', 'sources.approve', 'quality.view'],
+  data_officer: ['sources.view', 'sources.propose', 'quality.view'],
   regional_coordinator: ['sources.view', 'sources.propose', 'quality.view'],
   field_officer: ['sources.view'],
   lab_officer: ['sources.view'],

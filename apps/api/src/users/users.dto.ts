@@ -35,6 +35,11 @@ export class CreateUserDto {
 
 export class UpdateUserDto {
   @IsOptional()
+  @IsEmail({}, { message: 'Enter a valid email address' })
+  @MaxLength(200)
+  email?: string;
+
+  @IsOptional()
   @IsString()
   @MinLength(2)
   @MaxLength(120)

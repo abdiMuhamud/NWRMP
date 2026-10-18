@@ -76,8 +76,8 @@ export class UsersService {
   }
 
   async update(id: string, dto: UpdateUserDto, actor: AuthUser, ip: string | null) {
-    const [current] = await this.db.query<Assignment & { fullName: string; phone: string | null; isActive: boolean }>(
-      `SELECT role, department, region_id AS "regionId", full_name AS "fullName", phone, is_active AS "isActive"
+    const [current] = await this.db.query<Assignment & { email: string; fullName: string; phone: string | null; isActive: boolean }>(
+      `SELECT role, department, region_id AS "regionId", email, full_name AS "fullName", phone, is_active AS "isActive"
          FROM users WHERE id = $1`,
       [id],
     );
@@ -92,7 +92,13 @@ export class UsersService {
       department: dto.department !== undefined ? dto.department : current.department,
       regionId: dto.regionId !== undefined ? dto.regionId : current.regionId,
     });
+    const email = dto.email?.trim().toLowerCase() ?? current.email;
+    if (email !== current.email) {
+      const [taken] = await this.db.query('SELECT 1 FROM users WHERE lower(email) = $1 AND id <> $2', [email, id]);
+      if (taken) throw new ConflictException('A user with this email already exists');
+    }
     const values = {
+      email,
       fullName: dto.fullName?.trim() ?? current.fullName,
       phone: dto.phone !== undefined ? dto.phone?.trim() || null : current.phone,
       isActive: dto.isActive ?? current.isActive,
@@ -107,9 +113,9 @@ export class UsersService {
 
     await this.db.transaction(async (tx) => {
       await tx.query(
-        `UPDATE users SET full_name = $2, phone = $3, role = $4, department = $5, region_id = $6, is_active = $7, updated_at = now()
+        `UPDATE users SET full_name = $2, phone = $3, role = $4, department = $5, region_id = $6, is_active = $7, email = $8, updated_at = now()
           WHERE id = $1`,
-        [id, values.fullName, values.phone, values.role, values.department, values.regionId, values.isActive],
+        [id, values.fullName, values.phone, values.role, values.department, values.regionId, values.isActive, values.email],
       );
       // A deactivated user, or one whose access changed, must sign in again.
       if (changes.isActive || changes.role || changes.regionId || changes.department) {
