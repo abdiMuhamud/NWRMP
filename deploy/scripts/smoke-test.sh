@@ -1,13 +1,20 @@
 #!/usr/bin/env bash
 # Automated checks of a running NWRMP installation, from any machine with curl.
+#   ./scripts/smoke-test.sh http://10.20.30.40:8080                                # plain HTTP (NWRMP_PROTOCOL=http)
 #   ./scripts/smoke-test.sh https://10.20.30.40 --cacert certs/nwrmp-test-ca.crt   # NWRMP Test CA (IP address)
 #   ./scripts/smoke-test.sh https://nwrmp.example.gov                              # publicly trusted certificate
 #   ./scripts/smoke-test.sh https://10.20.30.40 --insecure                         # skip certificate checks
+# With HTTPS on a server whose HTTP port is not 80, set HTTP_PORT (e.g. HTTP_PORT=8080) for the redirect check.
 # Prompts for an administrator email and password for the signed-in checks.
 set -uo pipefail
 
-BASE="${1:?Usage: $0 https://<ip-or-name> [--cacert <file> | --insecure]}"
+BASE="${1:?Usage: $0 <http|https>://<ip-or-name>[:port] [--cacert <file> | --insecure]}"
 BASE="${BASE%/}"
+case "$BASE" in
+  https://*) TLS=1 ;;
+  http://*) TLS=0 ;;
+  *) echo "The address must start with http:// or https://" >&2; exit 2 ;;
+esac
 CURL=(curl -sS --max-time 20)
 case "${2:-}" in
   --insecure) CURL+=(-k) ;;
@@ -23,15 +30,18 @@ check() { # name, condition-result (0 = ok), detail
 code() { "${CURL[@]}" -o /dev/null -w '%{http_code}' "$@"; }
 
 echo "Public checks against $BASE"
-host="${BASE#https://}"
-redirect="$("${CURL[@]}" -o /dev/null -w '%{http_code} %{redirect_url}' "http://$host/")"
-[[ "$redirect" == 30[18]\ https://* ]]; check "HTTP redirects to HTTPS" $? "$redirect"
+headers="$("${CURL[@]}" -D - -o /dev/null "$BASE/")"
+if (( TLS )); then
+  hostname="${BASE#https://}"; hostname="${hostname%%:*}"
+  redirect="$("${CURL[@]}" -o /dev/null -w '%{http_code} %{redirect_url}' "http://${hostname}${HTTP_PORT:+:$HTTP_PORT}/")"
+  [[ "$redirect" == 30[18]\ https://* ]]; check "HTTP redirects to HTTPS" $? "$redirect"
+  grep -qi '^strict-transport-security' <<<"$headers"; check "HSTS header present" $?
+else
+  echo "  SKIP  HTTPS redirect and HSTS (the site runs on plain HTTP)"
+fi
 
 page="$("${CURL[@]}" "$BASE/")"
 [[ "$page" == *'id="root"'* ]]; check "Web app loads" $?
-
-headers="$("${CURL[@]}" -D - -o /dev/null "$BASE/")"
-grep -qi '^strict-transport-security' <<<"$headers"; check "HSTS header present" $?
 grep -qi '^x-content-type-options: nosniff' <<<"$headers"; check "nosniff header present" $?
 
 health="$("${CURL[@]}" "$BASE/api/health")"
@@ -51,7 +61,11 @@ body="$(printf '{"email":"%s","password":"%s"}' "$EMAIL" "$PASSWORD")"
 login_headers="$("${CURL[@]}" -D - -o /dev/null -c "$JAR" -H 'Content-Type: application/json' -H 'X-Requested-With: nwrmp' -d "$body" "$BASE/api/auth/login")"
 grep -q ' 200' <<<"$(head -1 <<<"$login_headers")"; check "Administrator can sign in" $?
 cookie="$(grep -i '^set-cookie: nwrmp_session' <<<"$login_headers")"
-[[ "$cookie" == *HttpOnly* && "$cookie" == *Secure* && "$cookie" == *SameSite=Lax* ]]; check "Session cookie is HttpOnly, Secure, SameSite=Lax" $?
+if (( TLS )); then
+  [[ "$cookie" == *HttpOnly* && "$cookie" == *Secure* && "$cookie" == *SameSite=Lax* ]]; check "Session cookie is HttpOnly, Secure, SameSite=Lax" $?
+else
+  [[ "$cookie" == *HttpOnly* && "$cookie" != *Secure* && "$cookie" == *SameSite=Lax* ]]; check "Session cookie is HttpOnly, SameSite=Lax (not Secure on plain HTTP)" $?
+fi
 
 me="$("${CURL[@]}" -b "$JAR" "$BASE/api/auth/me")"
 [[ "$me" == *'users.manage'* ]]; check "Signed-in user has administrator permissions" $?

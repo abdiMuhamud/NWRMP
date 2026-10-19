@@ -1,4 +1,6 @@
-// Phone capabilities used in the field: GPS and camera photos.
+// Phone and browser capabilities used in the app: GPS, ids, clipboard.
+// Some browser APIs exist only on HTTPS pages; a test server may run on plain HTTP,
+// so each helper has a fallback or a clear message.
 
 export interface GpsFix {
   lat: number;
@@ -8,6 +10,8 @@ export interface GpsFix {
 
 export function getPosition(timeoutMs = 20_000): Promise<GpsFix> {
   return new Promise((resolve, reject) => {
+    if (!window.isSecureContext)
+      return reject(new Error('GPS is blocked because this site is not on HTTPS. Ask the administrator to enable it for this phone.'));
     if (!('geolocation' in navigator)) return reject(new Error('This device cannot provide a GPS position'));
     navigator.geolocation.getCurrentPosition(
       (p) => resolve({ lat: round(p.coords.latitude), lng: round(p.coords.longitude), accuracy: Math.round(p.coords.accuracy) }),
@@ -24,6 +28,31 @@ export function getPosition(timeoutMs = 20_000): Promise<GpsFix> {
       { enableHighAccuracy: true, timeout: timeoutMs, maximumAge: 0 },
     );
   });
+}
+
+/** Random v4 UUID. crypto.randomUUID exists only on HTTPS pages; getRandomValues works everywhere. */
+export function newId(): string {
+  if (typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+  const b = crypto.getRandomValues(new Uint8Array(16));
+  b[6] = (b[6] & 0x0f) | 0x40;
+  b[8] = (b[8] & 0x3f) | 0x80;
+  const h = Array.from(b, (x) => x.toString(16).padStart(2, '0')).join('');
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+}
+
+/** Copies text; navigator.clipboard is missing on plain-HTTP pages, so fall back to execCommand. */
+export async function copyText(text: string): Promise<void> {
+  if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+  const area = document.createElement('textarea');
+  area.value = text;
+  area.setAttribute('readonly', '');
+  area.style.position = 'fixed';
+  area.style.opacity = '0';
+  document.body.appendChild(area);
+  area.select();
+  const ok = document.execCommand('copy');
+  area.remove();
+  if (!ok) throw new Error('Copy is not available in this browser');
 }
 
 /** Distance on the earth's surface in metres (haversine). */

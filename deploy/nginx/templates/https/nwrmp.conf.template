@@ -1,0 +1,56 @@
+# NWRMP over HTTPS (NWRMP_PROTOCOL=https, the default). Both servers are default servers, so the
+# site answers on the server's IP address or on any DNS name pointed at it: moving from an IP to
+# a domain later needs no change here, only a new certificate in deploy/certs.
+# ${NWRMP_HTTPS_PORT} is filled in from the container environment when nginx starts.
+
+# Docker's internal DNS: re-resolve the API container if it restarts with a new address.
+resolver 127.0.0.11 valid=10s ipv6=off;
+
+server {
+    listen 80 default_server;
+    server_name _;
+
+    # Container health check (plain HTTP, so it does not depend on the certificate).
+    location = /healthz {
+        access_log off;
+        return 200 "ok\n";
+    }
+
+    # Let's Encrypt HTTP-01 challenges (certbot --webroot), once a domain name is used.
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    # Public certificate of the NWRMP Test CA, for installing on test phones and PCs
+    # (only present when scripts/make-test-cert.sh was used). Served over HTTP on purpose:
+    # devices need it before they can trust the HTTPS site.
+    location = /nwrmp-test-ca.crt {
+        alias /etc/nginx/certs/nwrmp-test-ca.crt;
+        default_type application/x-x509-ca-cert;
+    }
+
+    # Everything else moves to HTTPS, on the host port users reach it on.
+    location / {
+        set $https_port "${NWRMP_HTTPS_PORT}";
+        if ($https_port = "443") {
+            return 301 https://$host$request_uri;
+        }
+        return 301 https://$host:$https_port$request_uri;
+    }
+}
+
+server {
+    listen 443 ssl default_server;
+    http2 on;
+    server_name _;
+
+    ssl_certificate     /etc/nginx/certs/fullchain.pem;
+    ssl_certificate_key /etc/nginx/certs/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers off;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 1d;
+
+    set $nwrmp_hsts "max-age=31536000";
+    include /etc/nginx/snippets/nwrmp-app.conf;
+}

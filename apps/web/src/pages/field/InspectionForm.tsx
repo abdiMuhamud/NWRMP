@@ -10,7 +10,7 @@ import { Button, Field, borderFor, inputClass } from '../../components/ui/Contro
 import { ErrorState, LoadingBlock } from '../../components/ui/States';
 import { useToast } from '../../components/ui/Toast';
 import { ApiError, apiDelete, apiPatch, apiPost, apiUpload } from '../../lib/api';
-import { compressPhoto, distanceM, formatDistance, getPosition, type GpsFix } from '../../lib/device';
+import { compressPhoto, distanceM, formatDistance, getPosition, newId, type GpsFix } from '../../lib/device';
 import { formatDate } from '../../lib/format';
 import { addToOutbox, discardOutboxItem, getOutboxItem, syncOutbox, useOnline } from '../../lib/offline';
 import { useInspection, useMyAssignments, useReference, useSource } from '../../lib/queries';
@@ -172,7 +172,7 @@ function Form({ target, existing }: { target: Target; existing: InspectionDetail
       const added = await Promise.all(
         picked.map(async (file) => {
           const blob = await compressPhoto(file);
-          return { clientId: crypto.randomUUID(), blob, url: URL.createObjectURL(blob), caption: '' };
+          return { clientId: newId(), blob, url: URL.createObjectURL(blob), caption: '' };
         }),
       );
       setPhotos((p) => [...p, ...added]);
@@ -227,7 +227,7 @@ function Form({ target, existing }: { target: Target; existing: InspectionDetail
       return;
     }
 
-    const clientId = crypto.randomUUID();
+    const clientId = newId();
     await addToOutbox({
       clientId,
       sourceId: target.sourceId,

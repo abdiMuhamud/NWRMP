@@ -60,9 +60,13 @@ services:
     restart: unless-stopped
     environment:
       TZ: ${TZ:-Africa/Mogadishu}
+      # https (default) or http: which site template nginx uses (see deploy/nginx/templates)
+      NGINX_ENVSUBST_TEMPLATE_DIR: /etc/nginx/templates/${NWRMP_PROTOCOL:-https}
+      NWRMP_HTTPS_PORT: ${NWRMP_HTTPS_PORT:-443}
     ports:
-      - "80:80"
-      - "443:443"
+      # Host ports; change them in .env when another web server already uses 80 or 443.
+      - "${NWRMP_HTTP_PORT:-80}:80"
+      - "${NWRMP_HTTPS_PORT:-443}:443"
     volumes:
       # ",z" relabels the folders for SELinux (Rocky Linux runs SELinux in enforcing mode).
       - ./certs:/etc/nginx/certs:ro,z

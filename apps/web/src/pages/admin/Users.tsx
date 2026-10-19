@@ -9,6 +9,7 @@ import { EmptyState, ErrorState, Skeleton } from '../../components/ui/States';
 import { useToast } from '../../components/ui/Toast';
 import { ApiError, apiPatch, apiPost } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
+import { copyText } from '../../lib/device';
 import { formatDate } from '../../lib/format';
 import { useReference, useUsers } from '../../lib/queries';
 import type { Role, UserRow } from '../../lib/types';
@@ -165,7 +166,12 @@ export function Users() {
               <Button
                 variant="ghost"
                 className="h-8 px-2"
-                onClick={() => navigator.clipboard.writeText(secret.password).then(() => toast('Copied'))}
+                onClick={() =>
+                  copyText(secret.password).then(
+                    () => toast('Copied'),
+                    () => toast('Copy is not available here: select the password and copy it', 'error'),
+                  )
+                }
               >
                 <Copy size={15} aria-hidden /> Copy
               </Button>
