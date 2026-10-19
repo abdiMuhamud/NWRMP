@@ -28,3 +28,9 @@ Thumbs.db
 
 # Local photo uploads (development)
 uploads/
+
+# Deployment secrets and certificates
+deploy/certs/*
+!deploy/certs/README.md
+deploy/certbot-www/
+deploy/test-ca/

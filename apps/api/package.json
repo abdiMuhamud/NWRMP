@@ -8,12 +8,13 @@
     "dev": "nest start --watch",
     "start": "node dist/main.js",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "db:migrate": "tsx scripts/migrate.ts",
-    "db:seed": "tsx scripts/seed.ts",
-    "db:reset": "tsx scripts/seed.ts --reset",
-    "users:demo": "tsx scripts/users.ts demo",
-    "users:create": "tsx scripts/users.ts create",
-    "users:import": "tsx scripts/users.ts import"
+    "db:migrate": "tsx src/cli.ts migrate",
+    "db:seed": "tsx src/cli.ts seed",
+    "db:reset": "tsx src/cli.ts seed --reset",
+    "users:demo": "tsx src/cli.ts users:demo",
+    "users:create": "tsx src/cli.ts users:create",
+    "users:import": "tsx src/cli.ts users:import",
+    "cli": "tsx src/cli.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.2.7",
