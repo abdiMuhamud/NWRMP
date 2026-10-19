@@ -22,16 +22,19 @@ const DEMO_USERS: { email: string; fullName: string; role: Role; department?: De
 export const DEMO_CREDENTIALS_FILE = path.resolve(process.cwd(), 'demo-accounts.local.txt');
 
 /**
- * Creates any missing demo accounts with one shared, randomly generated password
- * and writes the list to a local file. Returns the emails created.
+ * Creates any missing demo accounts with one shared, randomly generated password.
+ * Returns the sign-in details as text lines; also appends them to `file` when one is given.
  */
-export async function createDemoUsers(db: Db, file = DEMO_CREDENTIALS_FILE): Promise<string[]> {
+export async function createDemoUsers(
+  db: Db,
+  file: string | null = DEMO_CREDENTIALS_FILE,
+): Promise<{ created: string[]; lines: string[] }> {
   const regions = new Map(
     (await db.query<{ id: number; code: string }>('SELECT id, code FROM regions')).map((r) => [r.code, r.id]),
   );
   const existing = new Set((await db.query<{ email: string }>('SELECT lower(email) AS email FROM users')).map((r) => r.email));
   const missing = DEMO_USERS.filter((u) => !existing.has(u.email));
-  if (missing.length === 0) return [];
+  if (missing.length === 0) return { created: [], lines: [] };
 
   const password = generatePassword(16);
   const hash = await hashPassword(password);
@@ -55,6 +58,6 @@ export async function createDemoUsers(db: Db, file = DEMO_CREDENTIALS_FILE): Pro
     ...missing.map((u) => `${u.email.padEnd(30)} ${ROLE_LABELS[u.role]}${u.regionCode ? ` (${u.regionCode})` : ''}`),
     '',
   ];
-  writeFileSync(file, lines.join('\n'), { flag: 'a' });
-  return missing.map((u) => u.email);
+  if (file) writeFileSync(file, lines.join('\n'), { flag: 'a' });
+  return { created: missing.map((u) => u.email), lines };
 }

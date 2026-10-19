@@ -87,6 +87,16 @@ Security: passwords are hashed with scrypt; sessions are server-side and stored 
 `SameSite=Lax` cookie; state-changing requests must carry `X-Requested-With: nwrmp`; five failed sign-ins lock
 an account for 15 minutes; every sign-in, request, decision and admin action is written to the audit log.
 
+## Deploy on a Ministry server (Rocky Linux)
+
+Production deployment uses Docker Compose (PostgreSQL + PostGIS, the API, and nginx with HTTPS) on a single
+Rocky Linux server, reached by its IP address until the Ministry has a domain name. Follow
+**[docs/deployment/rocky-linux.md](docs/deployment/rocky-linux.md)** (Word version:
+[NWRMP-Deployment-Rocky-Linux.docx](docs/deployment/NWRMP-Deployment-Rocky-Linux.docx)) — it covers server
+preparation, HTTPS on an IP address with a private test CA, first-time setup, a full end-to-end test plan with
+sign-off, backups, updates and moving to a domain name later. After editing the Markdown, rebuild the Word file
+with `docs/deployment/tools/build-docx.cjs`. Files: `deploy/`, `apps/api/Dockerfile`, `apps/web/Dockerfile`.
+
 ## Deploy to Vercel (testing)
 
 Both Vercel projects (`nwrmp-api`, `nwrmp-web`) are connected to this GitHub repository:

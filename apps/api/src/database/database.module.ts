@@ -19,7 +19,7 @@ import { migrate } from './migrate';
         if (db.kind === 'pglite') {
           const summary = await seedIfEmpty(db);
           if (summary) logger.log(`\n${describeImport(summary)}`);
-          const created = await createDemoUsers(db);
+          const { created } = await createDemoUsers(db);
           if (created.length) logger.log(`Created ${created.length} demo accounts; sign-in details are in ${DEMO_CREDENTIALS_FILE}`);
         }
         return db;

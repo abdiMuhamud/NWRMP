@@ -1,0 +1,17 @@
+# Images are built from the repository root (see deploy/docker-compose.yml).
+**/node_modules
+**/dist
+**/.pglite
+**/uploads
+**/.vercel
+**/.env
+**/.env.*
+!**/.env.example
+**/*.local.*
+**/*.tsbuildinfo
+.git
+.claude
+deploy/certs
+deploy/certbot-www
+deploy/.env
+deploy/test-ca
