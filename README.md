@@ -93,8 +93,9 @@ Production deployment uses Docker Compose (PostgreSQL + PostGIS, the API, and ng
 Rocky Linux server, reached by its IP address until the Ministry has a domain name. Follow
 **[docs/deployment/rocky-linux.md](docs/deployment/rocky-linux.md)** (Word version:
 [NWRMP-Deployment-Rocky-Linux.docx](docs/deployment/NWRMP-Deployment-Rocky-Linux.docx)) — it covers server
-preparation, HTTPS on an IP address with a private test CA, first-time setup, a full end-to-end test plan with
-sign-off, backups, updates and moving to a domain name later. After editing the Markdown, rebuild the Word file
+preparation (including servers shared with other applications), plain HTTP or HTTPS on an IP address with a
+private test CA, first-time setup, a full end-to-end test plan with sign-off, backups, updates and moving to
+HTTPS or a domain name later. After editing the Markdown, rebuild the Word file
 with `docs/deployment/tools/build-docx.cjs`. Files: `deploy/`, `apps/api/Dockerfile`, `apps/web/Dockerfile`.
 
 ## Deploy to Vercel (testing)

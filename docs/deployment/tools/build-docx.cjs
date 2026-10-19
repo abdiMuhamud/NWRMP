@@ -24,7 +24,7 @@ const EMBLEM = path.join(ROOT, 'apps/web/public/brand/emblem.png');
 const DOC = {
   title: 'Deployment and End-to-End Test Guide',
   subtitle: 'Rocky Linux server · Docker · access by IP address',
-  version: '1.0',
+  version: '1.1',
   date: '19 October 2026',
 };
 
@@ -319,7 +319,7 @@ function cover() {
   const info = [
     ['Document', 'Installation runbook and end-to-end test plan'],
     ['System', 'National Water Resources Management Platform (NWRMP)'],
-    ['Target', 'One Rocky Linux 9 server, Docker Compose, HTTPS on the server IP address'],
+    ['Target', 'One Rocky Linux 9 server (dedicated or shared), Docker Compose, HTTP or HTTPS on the server IP address'],
     ['Audience', 'Systems engineer, Ministry ICT'],
     ['Source code', 'github.com/abdiMuhamud/NWRMP (branch main)'],
     ['Version', `${DOC.version} — ${DOC.date}`],

@@ -14,14 +14,16 @@ export function readCookie(req: Request, name: string): string | null {
 }
 
 /**
- * The web app and API share one origin (Vite proxy locally, a Vercel rewrite online),
+ * The web app and API share one origin (Vite proxy locally, a Vercel rewrite or nginx online),
  * so the session can be an HttpOnly, SameSite=Lax first-party cookie.
+ * Secure follows the protocol the browser used (X-Forwarded-Proto from the proxy, 'trust proxy'
+ * is on): browsers drop Secure cookies on plain-HTTP sites, which would make sign-in impossible.
  */
-export function sessionCookieOptions(): CookieOptions {
+export function sessionCookieOptions(req: Request): CookieOptions {
   return {
     httpOnly: true,
     sameSite: 'lax',
-    secure: Boolean(process.env.VERCEL) || process.env.NODE_ENV === 'production',
+    secure: Boolean(process.env.VERCEL) || req.secure,
     path: '/',
     maxAge: SESSION_HOURS * 3600 * 1000,
   };

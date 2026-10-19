@@ -37,11 +37,12 @@ export class AuthController {
   @HttpCode(200)
   async login(
     @Body(validated(LoginDto)) body: LoginDto,
+    @Req() req: Request,
     @RequestMeta() meta: RequestMetaValue,
     @Res({ passthrough: true }) res: Response,
   ) {
     const { token, user } = await this.auth.login(body.email, body.password, meta);
-    res.cookie(SESSION_COOKIE, token, sessionCookieOptions());
+    res.cookie(SESSION_COOKIE, token, sessionCookieOptions(req));
     return this.auth.me(user);
   }
 
@@ -51,7 +52,7 @@ export class AuthController {
   async logout(@Req() req: Request, @RequestMeta() meta: RequestMetaValue, @Res({ passthrough: true }) res: Response) {
     const token = readCookie(req, SESSION_COOKIE);
     if (token) await this.auth.logout(token, meta);
-    const { maxAge: _maxAge, ...options } = sessionCookieOptions();
+    const { maxAge: _maxAge, ...options } = sessionCookieOptions(req);
     res.clearCookie(SESSION_COOKIE, options);
   }
 

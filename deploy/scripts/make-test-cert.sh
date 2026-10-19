@@ -55,5 +55,7 @@ chmod 644 certs/fullchain.pem
 
 openssl verify -CAfile test-ca/nwrmp-test-ca.crt "$work/server.crt" > /dev/null
 echo "Server certificate for ${HOST} (${SAN}) written to deploy/certs/ (valid 825 days)."
-echo "Install certs/nwrmp-test-ca.crt on test devices, or download it from http://${HOST}/nwrmp-test-ca.crt"
+HTTP_PORT="$(grep -E '^NWRMP_HTTP_PORT=' .env 2>/dev/null | cut -d= -f2 || true)"
+[[ -z "$HTTP_PORT" || "$HTTP_PORT" == 80 ]] && HTTP_PORT="" || HTTP_PORT=":${HTTP_PORT##*:}"
+echo "Install certs/nwrmp-test-ca.crt on test devices, or download it from http://${HOST}${HTTP_PORT}/nwrmp-test-ca.crt"
 echo "If nginx is already running, reload it:  docker compose exec web nginx -s reload"
