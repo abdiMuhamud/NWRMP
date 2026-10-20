@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, Plus, RotateCcw } from 'lucide-react';
+import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, FileSpreadsheet, Plus, RotateCcw } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { StatusBadge, TypeLabel, VerificationBadge } from '../components/ui/Badges';
@@ -6,6 +6,7 @@ import { Card } from '../components/ui/Card';
 import { Button, SearchInput, Select } from '../components/ui/Controls';
 import { PageHeader } from '../components/ui/PageHeader';
 import { EmptyState, ErrorState, Skeleton } from '../components/ui/States';
+import { apiHref } from '../lib/api';
 import { SOURCE_TYPES, STATUSES, STATUS_META, TYPE_META } from '../lib/domain';
 import { formatDate, formatNumber } from '../lib/format';
 import { useAuth } from '../lib/auth';
@@ -74,11 +75,20 @@ export function Sources() {
         title="Water sources"
         description="Every registered borehole, shallow well, berkad, dam and spring. Search, filter and open a record for full details."
         actions={
-          can('sources.propose') && (
-            <Link to="/sources/new" className="inline-flex h-10 items-center gap-2 rounded-lg bg-brand-700 px-3.5 text-sm font-medium text-white shadow-card hover:bg-brand-800">
-              <Plus size={16} aria-hidden /> Register a source
-            </Link>
-          )
+          <>
+            {/* The rows matching the current search and filters, every field. */}
+            <a
+              href={apiHref('/exports/sources', { q, type: query.type, region: query.region, status: query.status, verification: query.verification })}
+              className="inline-flex h-10 items-center gap-2 rounded-lg border border-line-strong bg-surface px-3.5 text-sm font-medium text-ink hover:bg-page"
+            >
+              <FileSpreadsheet size={16} aria-hidden /> Export to Excel
+            </a>
+            {can('sources.propose') && (
+              <Link to="/sources/new" className="inline-flex h-10 items-center gap-2 rounded-lg bg-brand-700 px-3.5 text-sm font-medium text-white shadow-card hover:bg-brand-800">
+                <Plus size={16} aria-hidden /> Register a source
+              </Link>
+            )}
+          </>
         }
       />
 

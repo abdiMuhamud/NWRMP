@@ -21,12 +21,21 @@ export function AppShell() {
         >
           Skip to content
         </a>
-        <Sidebar open={navOpen} onClose={() => setNavOpen(false)} />
-        <div className="lg:pl-[272px]">
-          <Topbar onMenu={() => setNavOpen(true)} />
+        {/* Printed pages (reports) show only their content. */}
+        <div className="print:hidden">
+          <Sidebar open={navOpen} onClose={() => setNavOpen(false)} />
+        </div>
+        <div className="lg:pl-[272px] print:pl-0">
+          <div className="print:hidden">
+            <Topbar onMenu={() => setNavOpen(true)} />
+          </div>
           <main
             id="main"
-            className={fullBleed ? 'h-[calc(100dvh-4rem)]' : 'mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8'}
+            className={
+              fullBleed
+                ? 'h-[calc(100dvh-4rem)]'
+                : 'mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8 print:max-w-none print:p-0'
+            }
           >
             <Outlet />
           </main>

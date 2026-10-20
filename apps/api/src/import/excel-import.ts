@@ -39,13 +39,33 @@ export interface ImportSummary {
   skipped: number;
   possibleDuplicates: number;
   issues: Record<Severity, number>;
+  /** Sample records removed before the import (removeSampleData) */
+  removedSample: number;
+  /** The first problems found, most serious first, for showing straight after an upload */
+  firstIssues: Omit<Issue, 'sourceId'>[];
+  /** True when nothing was saved (dryRun) */
+  dryRun: boolean;
 }
 
 export interface ImportOptions {
   batch?: string;
   /** Stored on each record so its origin stays traceable, e.g. "SWALIM legacy dataset" */
   dataSource?: string;
+  /** Run the whole import, report what it would do, then roll everything back. */
+  dryRun?: boolean;
+  /** Delete the example records (data source "Sample …") and everything linked to them first. */
+  removeSampleData?: boolean;
 }
+
+/** Thrown inside the transaction to roll a dry run back while keeping its report. */
+class DryRunRollback extends Error {
+  constructor(readonly summary: ImportSummary) {
+    super('dry run');
+  }
+}
+
+const SEVERITY_ORDER: Record<Severity, number> = { error: 0, warning: 1, info: 2 };
+const FIRST_ISSUES = 200;
 
 interface Column {
   index: number;
@@ -76,7 +96,20 @@ export async function importWorkbook(db: Db, file: string | Buffer, options: Imp
   const batch = options.batch ?? `import-${new Date().toISOString()}`;
   const dataSource = options.dataSource ?? 'Spreadsheet import';
 
-  return db.transaction(async (tx) => {
+  try {
+    return await db.transaction(async (tx) => {
+    let removedSample = 0;
+    if (options.removeSampleData) {
+      // Inspections, lab tests, work orders and repairs of these records go with them (ON DELETE CASCADE).
+      const sample = await tx.query<{ id: string }>(`SELECT id FROM water_sources WHERE data_source ILIKE 'sample%'`);
+      if (sample.length) {
+        const ids = `{${sample.map((r) => r.id).join(',')}}`;
+        await tx.query('DELETE FROM import_issues WHERE source_id = ANY($1::uuid[])', [ids]);
+        await tx.query('DELETE FROM water_sources WHERE id = ANY($1::uuid[])', [ids]);
+      }
+      removedSample = sample.length;
+    }
+
     const regions = await tx.query<RegionRow>('SELECT id, code, name, aliases FROM regions');
     const regionByName = new Map<string, RegionRow>();
     for (const r of regions) {
@@ -108,6 +141,9 @@ export async function importWorkbook(db: Db, file: string | Buffer, options: Imp
       skipped: 0,
       possibleDuplicates: 0,
       issues: { info: 0, warning: 0, error: 0 },
+      removedSample,
+      firstIssues: [],
+      dryRun: Boolean(options.dryRun),
     };
     const insertedIds: string[] = [];
 
@@ -234,9 +270,18 @@ export async function importWorkbook(db: Db, file: string | Buffer, options: Imp
     summary.possibleDuplicates = await flagPossibleDuplicates(tx, insertedIds, issues);
 
     for (const issue of issues) summary.issues[issue.severity]++;
+    summary.firstIssues = [...issues]
+      .sort((a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity])
+      .slice(0, FIRST_ISSUES)
+      .map(({ sourceId: _sourceId, ...issue }) => issue);
+    if (options.dryRun) throw new DryRunRollback(summary);
     await insertIssues(tx, batch, issues);
     return summary;
-  });
+    });
+  } catch (err) {
+    if (err instanceof DryRunRollback) return err.summary;
+    throw err;
+  }
 }
 
 function readHeader(ws: ExcelJS.Worksheet, sheet: string, issues: Issue[]): Column[] {

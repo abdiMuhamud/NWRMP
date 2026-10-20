@@ -4,6 +4,7 @@ import {
   ClipboardPen,
   Droplets,
   FileBarChart,
+  FileUp,
   FlaskConical,
   History,
   Inbox,
@@ -49,6 +50,7 @@ export const NAV: NavGroup[] = [
       { to: '/sources', label: 'Water sources', icon: Droplets },
       { to: '/approvals', label: 'Approvals', icon: Inbox, badge: 'approvals' },
       { to: '/data-quality', label: 'Data quality', icon: ClipboardCheck, permission: 'quality.view' },
+      { to: '/import', label: 'Import data', icon: FileUp, permission: 'data.import' },
     ],
   },
   {
@@ -58,7 +60,7 @@ export const NAV: NavGroup[] = [
       { to: '/inspections', label: 'Inspections', icon: ClipboardList, anyPermission: ['inspections.assign', 'inspections.review'], badge: 'inspections' },
       { to: '/water-quality', label: 'Water quality', icon: FlaskConical, badge: 'lab' },
       { to: '/maintenance', label: 'Maintenance', icon: Wrench, badge: 'maintenance' },
-      { to: '/planned/reports', label: 'Reports', icon: FileBarChart, soon: true },
+      { to: '/reports', label: 'Reports', icon: FileBarChart },
     ],
   },
   {

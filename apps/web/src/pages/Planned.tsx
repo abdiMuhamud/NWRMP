@@ -7,16 +7,6 @@ import { NotFound } from './NotFound';
 // Roadmap from the NWRMP proposal: 1 Registry + GIS, 2 Inspections + dynamic forms,
 // 3 Water quality + maintenance, 4 Reports + analytics, 5 Mobile + offline, 6 Government integrations.
 const PLANNED: Record<string, { phase: string; summary: string; features: string[] }> = {
-  reports: {
-    phase: 'Phase 4',
-    summary: 'Standard Ministry reports and analysis, exportable for partners and decision makers.',
-    features: [
-      'Regional and national summary reports (PDF, Excel)',
-      'Coverage analysis: settlements far from a functioning source',
-      'Scheduled monthly and quarterly reports',
-      'Open data export for partners',
-    ],
-  },
   forms: {
     phase: 'Phase 2',
     summary: 'Let the Ministry add or change data-collection fields and source types without a developer.',

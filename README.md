@@ -4,7 +4,7 @@ Digital platform of the **Ministry of Water Development** (Wasaaradda Horumarint
 mapping and monitoring the country's water sources: boreholes, shallow wells, berkads, dams and springs.
 
 This repository holds **Phase 1 — Registry & GIS**, **Sprint A — users and control**, **Sprint B — field collection**
-and **Sprint C — water quality and maintenance**:
+**Sprint C — water quality and maintenance** and **Sprint D — reports and data import**:
 
 - **Field inspections**: coordinators assign visits; field officers fill a phone form (GPS, photos) that works offline;
   coordinators approve or return; approval updates the record and marks it verified in the field.
@@ -13,6 +13,10 @@ and **Sprint C — water quality and maintenance**:
   default), outcome per test, results over time on each record, unsafe sources on the dashboard and the map.
 - **Maintenance work orders**: breakdowns reported from a record, taken and completed by O&M officers, closed by the
   regional coordinator, which updates the source's status and repair history.
+- **Reports and exports**: a printable summary report (save as PDF) and Excel downloads of the registry, inspections,
+  lab results, work orders and audit log, limited to the user's region for regional staff.
+- **Data import in the app**: upload a workbook in the Ministry template, check it first (nothing saved), then import;
+  optionally replacing the sample data.
 
 - **Sign-in, roles and region limits**: seven roles mapped to the Ministry's departments; regional staff see only their region.
 - **Approval workflow**: every new source and every edit is a request that the responsible department approves or rejects.
@@ -23,7 +27,7 @@ and **Sprint C — water quality and maintenance**:
 - **National map**: MapLibre map coloured by type or status, with a distinct marker shape per type.
 - **Nearby search**: other sources within a radius, measured on the ground with PostGIS.
 - **Spreadsheet import with data-quality log**: cleans legacy Excel data and records every problem it finds.
-- **Roadmap pages** for the later phases (reports, form builder, native mobile app).
+- **Roadmap pages** for the later phases (form builder, native mobile app).
 
 ## Stack
 
