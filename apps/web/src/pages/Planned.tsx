@@ -7,26 +7,6 @@ import { NotFound } from './NotFound';
 // Roadmap from the NWRMP proposal: 1 Registry + GIS, 2 Inspections + dynamic forms,
 // 3 Water quality + maintenance, 4 Reports + analytics, 5 Mobile + offline, 6 Government integrations.
 const PLANNED: Record<string, { phase: string; summary: string; features: string[] }> = {
-  'water-quality': {
-    phase: 'Phase 3',
-    summary: 'Laboratory and field test results linked to each water source, with alerts when results exceed national standards.',
-    features: [
-      'Record lab results (pH, EC, fluoride, salinity, bacteria)',
-      'Compare results with drinking-water guidelines',
-      'Trend of results per source over time',
-      'Water Quality Lab work queue',
-    ],
-  },
-  maintenance: {
-    phase: 'Phase 3',
-    summary: 'Track breakdowns, repairs and rehabilitation work, and who carried them out.',
-    features: [
-      'Report a breakdown from the field',
-      'Work orders for O&M teams and contractors',
-      'Spare parts and cost tracking',
-      'Downtime and repair-time statistics',
-    ],
-  },
   reports: {
     phase: 'Phase 4',
     summary: 'Standard Ministry reports and analysis, exportable for partners and decision makers.',

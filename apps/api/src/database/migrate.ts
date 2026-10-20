@@ -4,6 +4,7 @@ import * as m002 from './migrations/002-regions';
 import * as m003 from './migrations/003-users-workflow';
 import * as m004 from './migrations/004-data-officer-role';
 import * as m005 from './migrations/005-field-inspections';
+import * as m006 from './migrations/006-lab-maintenance';
 
 // Ordered list. Never edit a migration that has been applied; add a new one.
 const migrations: { id: string; sql: string }[] = [
@@ -12,6 +13,7 @@ const migrations: { id: string; sql: string }[] = [
   { id: '003-users-workflow', sql: m003.sql },
   { id: '004-data-officer-role', sql: m004.sql },
   { id: '005-field-inspections', sql: m005.sql },
+  { id: '006-lab-maintenance', sql: m006.sql },
 ];
 
 export async function migrate(db: Db): Promise<string[]> {

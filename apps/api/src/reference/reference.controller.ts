@@ -2,6 +2,7 @@ import { Controller, Get, Inject } from '@nestjs/common';
 import { RequirePermission } from '../auth/decorators';
 import { DEPARTMENT_SOURCE_TYPES, DEPARTMENTS, ROLE_LABELS, ROLES, REGION_SCOPED_ROLES } from '../auth/roles';
 import { DB, type Db } from '../database/db';
+import { WORK_ORDER_CATEGORIES, WORK_ORDER_PRIORITIES } from '../maintenance/work-order-options';
 import { INSPECTION_FIELD_KEYS, SOURCE_FIELDS, SOURCE_SECTIONS } from './source-fields';
 import { FUNCTIONAL_STATUSES, SOURCE_TYPE_DEFS, SOURCE_TYPES } from './source-types';
 
@@ -37,6 +38,8 @@ export class ReferenceController {
       inspectionFields: INSPECTION_FIELD_KEYS,
       roles: ROLES.map((code) => ({ code, label: ROLE_LABELS[code], regionScoped: REGION_SCOPED_ROLES.includes(code) })),
       departments: DEPARTMENTS.map((d) => ({ ...d, approves: DEPARTMENT_SOURCE_TYPES[d.code] ?? [] })),
+      workOrderCategories: WORK_ORDER_CATEGORIES,
+      workOrderPriorities: WORK_ORDER_PRIORITIES,
     };
   }
 }

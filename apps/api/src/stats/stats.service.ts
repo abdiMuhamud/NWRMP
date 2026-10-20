@@ -21,7 +21,9 @@ export class StatsService {
       return this.db.query(sql(sourceWhere(filters, params)), params);
     };
 
-    const [totals, byType, byRegion, power, quality, condition, recentInspections] = await Promise.all([
+    const regionClause = region ? 'AND s.region_id = $1' : '';
+    const regionParams = region ? [region] : [];
+    const [totals, byType, byRegion, power, quality, condition, recentInspections, lab, maintenance] = await Promise.all([
       scoped(
         (where) => `
         SELECT count(*)::int AS sources,
@@ -71,6 +73,30 @@ export class StatsService {
           LIMIT 6`,
         region ? [region] : [],
       ),
+      // Latest laboratory result of each tested source
+      this.db.query<{ tested: number; unsafe: number; concern: number }>(
+        `SELECT count(*)::int AS tested,
+                count(*) FILTER (WHERE latest.outcome = 'unsafe')::int AS unsafe,
+                count(*) FILTER (WHERE latest.outcome = 'concern')::int AS concern
+           FROM (SELECT DISTINCT ON (t.source_id) t.outcome
+                   FROM wq_tests t JOIN water_sources s ON s.id = t.source_id
+                  WHERE t.state = 'completed' ${regionClause}
+                  ORDER BY t.source_id, t.sampled_on DESC, t.recorded_at DESC) latest`,
+        regionParams,
+      ),
+      this.db.query<{ open: number; urgent: number; closedRecently: number; avgRepairDays: number | null; brokenWithoutOrder: number }>(
+        `SELECT count(*) FILTER (WHERE w.status IN ('open', 'assigned', 'in_progress', 'completed'))::int AS open,
+                count(*) FILTER (WHERE w.status IN ('open', 'assigned', 'in_progress', 'completed') AND w.priority = 'urgent')::int AS urgent,
+                count(*) FILTER (WHERE w.status = 'closed' AND w.closed_at > now() - interval '180 days')::int AS "closedRecently",
+                (avg(extract(epoch FROM (w.closed_at - w.reported_at)) / 86400)
+                   FILTER (WHERE w.status = 'closed' AND w.closed_at > now() - interval '180 days'))::float8 AS "avgRepairDays",
+                (SELECT count(*) FROM water_sources s
+                  WHERE s.status = 'non_functioning' ${regionClause}
+                    AND NOT EXISTS (SELECT 1 FROM work_orders o WHERE o.source_id = s.id AND o.status NOT IN ('closed', 'cancelled')))::int AS "brokenWithoutOrder"
+           FROM work_orders w JOIN water_sources s ON s.id = w.source_id
+          WHERE true ${regionClause}`,
+        regionParams,
+      ),
     ]);
 
     // Always return every source type, in the fixed display order.
@@ -87,6 +113,8 @@ export class StatsService {
       byQuality: quality,
       byCondition: condition,
       recentInspections,
+      waterQuality: lab[0],
+      maintenance: maintenance[0],
     };
   }
 

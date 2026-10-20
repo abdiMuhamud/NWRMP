@@ -1,4 +1,4 @@
-import { ArrowRight, Beef, CircleCheck, Info, ShieldQuestion, Users } from 'lucide-react';
+import { ArrowRight, Beef, CircleCheck, Info, ShieldAlert, ShieldQuestion, Timer, Users, Wrench } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router';
 import { BarList } from '../components/charts/BarList';
 import { StatusStackedBars } from '../components/charts/StatusStackedBars';
@@ -145,6 +145,49 @@ function DashboardBody({
           detail="Camels, cattle, sheep and goats · as reported"
           icon={Beef}
           tone="gold"
+        />
+      </div>
+
+      {/* Water quality and maintenance */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <Link to="/water-quality?tab=results&outcome=unsafe" className="block rounded-xl transition hover:-translate-y-px hover:shadow-float">
+          <StatTile
+            label="Unsafe drinking water"
+            value={formatNumber(summary.waterQuality.unsafe)}
+            detail={
+              summary.waterQuality.tested
+                ? `Sources failing a health limit at their latest lab test · ${formatNumber(summary.waterQuality.tested)} tested`
+                : 'No laboratory results recorded yet'
+            }
+            icon={ShieldAlert}
+            tone={summary.waterQuality.unsafe ? 'gold' : 'neutral'}
+          />
+        </Link>
+        <Link to="/maintenance" className="block rounded-xl transition hover:-translate-y-px hover:shadow-float">
+          <StatTile
+            label="Open work orders"
+            value={formatNumber(summary.maintenance.open)}
+            detail={`${formatNumber(summary.maintenance.urgent)} urgent · ${formatNumber(summary.maintenance.brokenWithoutOrder)} broken sources with no repair requested`}
+            icon={Wrench}
+            tone="water"
+          />
+        </Link>
+        <StatTile
+          label="Average time to repair"
+          value={
+            summary.maintenance.avgRepairDays === null
+              ? '—'
+              : summary.maintenance.avgRepairDays < 1
+                ? '< 1 day'
+                : `${formatNumber(summary.maintenance.avgRepairDays, summary.maintenance.avgRepairDays < 10 ? 1 : 0)} days`
+          }
+          detail={
+            summary.maintenance.closedRecently
+              ? `From report to closure · ${formatNumber(summary.maintenance.closedRecently)} repairs in the last 180 days`
+              : 'No repairs closed in the last 180 days'
+          }
+          icon={Timer}
+          tone="brand"
         />
       </div>
 

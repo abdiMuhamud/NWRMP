@@ -3,11 +3,16 @@
 Digital platform of the **Ministry of Water Development** (Wasaaradda Horumarinta Biyaha) for registering,
 mapping and monitoring the country's water sources: boreholes, shallow wells, berkads, dams and springs.
 
-This repository holds **Phase 1 — Registry & GIS**, **Sprint A — users and control** and **Sprint B — field collection**:
+This repository holds **Phase 1 — Registry & GIS**, **Sprint A — users and control**, **Sprint B — field collection**
+and **Sprint C — water quality and maintenance**:
 
 - **Field inspections**: coordinators assign visits; field officers fill a phone form (GPS, photos) that works offline;
   coordinators approve or return; approval updates the record and marks it verified in the field.
 - **Installable app**: add NWRMP to a phone's home screen; the app and viewed map areas load without signal.
+- **Water-quality lab**: test requests from the field, results checked against editable limits (WHO values by
+  default), outcome per test, results over time on each record, unsafe sources on the dashboard and the map.
+- **Maintenance work orders**: breakdowns reported from a record, taken and completed by O&M officers, closed by the
+  regional coordinator, which updates the source's status and repair history.
 
 - **Sign-in, roles and region limits**: seven roles mapped to the Ministry's departments; regional staff see only their region.
 - **Approval workflow**: every new source and every edit is a request that the responsible department approves or rejects.
@@ -18,7 +23,7 @@ This repository holds **Phase 1 — Registry & GIS**, **Sprint A — users and c
 - **National map**: MapLibre map coloured by type or status, with a distinct marker shape per type.
 - **Nearby search**: other sources within a radius, measured on the ground with PostGIS.
 - **Spreadsheet import with data-quality log**: cleans legacy Excel data and records every problem it finds.
-- **Roadmap pages** for the later phases (inspections, water quality, maintenance, reports, forms, users, mobile).
+- **Roadmap pages** for the later phases (reports, form builder, native mobile app).
 
 ## Stack
 
@@ -140,6 +145,22 @@ To set up the projects from scratch, the repository deploys as **two Vercel proj
 Photos are compressed on the phone (about 1600 px) and stored privately: Vercel Blob (private store) online, the
 `uploads/` folder locally. They are only ever served through the API to signed-in users who can see the source.
 
+## Water quality and maintenance (Sprint C)
+
+**Water quality.** Coordinators, field officers and data officers request a test from a source's page (sample date,
+sampling point, a note for the lab). Lab officers see requests under **Water quality → Waiting for the lab**, or record
+a test directly, and enter the values measured. Each value is checked against its limit while they type; the test's
+outcome is *Meets standards*, *Taste or appearance concern* (an appearance or taste limit exceeded) or *Unsafe for
+drinking* (a health limit exceeded). Results are final when saved; corrections are allowed to the officer who
+recorded them and kept in the audit log. The limits live in the app (**Water quality → Limits**), seeded with WHO
+guideline values and editable by lab officers and administrators; each result keeps the limit it was judged against.
+
+**Maintenance.** Anyone in the field chain can **Report a breakdown** on a source (type of problem, priority,
+description); a non-functioning source without a work order shows a prompt to do so. Maintenance officers take or
+assign the job, start it and complete it with a repair report (work done, parts, cost, whether the source works
+again). The regional coordinator (or an administrator) then **closes** it, which sets the source to functioning or not
+functioning and adds the repair to its interventions and change history, or **reopens** it with a comment.
+
 ## Data import
 
 `apps/api/src/import` reads workbooks in the Ministry template (one sheet per source type). It:
@@ -153,6 +174,7 @@ Photos are compressed on the phone (about 1600 px) and stored privately: Vercel 
 
 ## To confirm with the Ministry
 
+- The national drinking-water standard (limits to enter under Water quality → Limits), and the EC limit.
 - The official list of regions and districts, and their boundaries (GIS layers) for the map.
 - The meaning of the `dw_*` columns on the borehole sheet (assumed: the dug well beside the borehole).
 - The national code format and the final data-collection template.

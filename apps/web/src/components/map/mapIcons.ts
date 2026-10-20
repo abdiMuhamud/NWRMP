@@ -1,5 +1,5 @@
 import type { Map as MapLibreMap } from 'maplibre-gl';
-import { SHAPE_PATHS, SOURCE_TYPES, STATUSES, STATUS_META, TYPE_META } from '../../lib/domain';
+import { OUTCOMES, OUTCOME_META, SHAPE_PATHS, SOURCE_TYPES, STATUSES, STATUS_META, TYPE_META } from '../../lib/domain';
 
 const SIZE = 16; // CSS pixels
 const RATIO = 2; // drawn at 2x for sharp markers on high-density screens
@@ -20,13 +20,14 @@ function drawMarker(path: string, color: string): ImageData {
   return ctx.getImageData(0, 0, canvas.width, canvas.height);
 }
 
-/** Registers one marker per (type, colour) pair: `src-{type}-{type|status}`. */
+/** Registers one marker per (type, colour) pair: `src-{type}-{type|status|q-outcome}`. */
 export function registerSourceIcons(map: MapLibreMap) {
   for (const type of SOURCE_TYPES) {
     const path = SHAPE_PATHS[TYPE_META[type].shape];
     const variants: [string, string][] = [
       [type, TYPE_META[type].color],
       ...STATUSES.map((s): [string, string] => [s, STATUS_META[s].color]),
+      ...OUTCOMES.map((o): [string, string] => [`q-${o}`, OUTCOME_META[o].color]),
     ];
     for (const [key, color] of variants) {
       const id = `src-${type}-${key}`;

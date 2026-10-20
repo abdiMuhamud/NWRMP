@@ -72,7 +72,7 @@ me="$("${CURL[@]}" -b "$JAR" "$BASE/api/auth/me")"
 if [[ "$me" == *'"mustChangePassword":true'* ]]; then
   echo "  NOTE  This account still has a temporary password: sign in through the browser and change it, then re-run."
 else
-  for path in /api/reference /api/stats/summary "/api/sources?pageSize=1" /api/sources/geojson /api/data-quality /api/change-requests/counts /api/inspections/counts /api/users "/api/audit?pageSize=1"; do
+  for path in /api/reference /api/stats/summary "/api/sources?pageSize=1" /api/sources/geojson /api/data-quality /api/change-requests/counts /api/inspections/counts /api/water-quality/parameters /api/work-orders/counts /api/users "/api/audit?pageSize=1"; do
     [[ "$(code -b "$JAR" "$BASE$path")" == 200 ]]; check "GET $path" $?
   done
 fi

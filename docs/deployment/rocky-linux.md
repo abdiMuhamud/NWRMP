@@ -149,7 +149,7 @@ docker run --rm hello-world
 git clone https://github.com/abdiMuhamud/NWRMP.git /opt/nwrmp
 cd /opt/nwrmp
 git checkout main          # or a release tag agreed with the project team
-git log --oneline -1       # note the commit for the test record (§9.5)
+git log --oneline -1       # note the commit for the test record (§9.7)
 cd /opt/nwrmp/deploy
 ```
 
@@ -325,7 +325,7 @@ The import report lists rows imported, skipped and data-quality issues; the issu
 
 ### 8.4 Demo accounts for testing (optional)
 
-Creates one account per role (`admin@nwrmp.test`, `coordinator.mj@nwrmp.test`, `field.mj@nwrmp.test`, …) with one shared password, printed once:
+Creates one account per role (`admin@nwrmp.test`, `coordinator.mj@nwrmp.test`, `field.mj@nwrmp.test`, `lab@nwrmp.test`, `maintenance@nwrmp.test`, …) with one shared password, printed once:
 
 ```bash
 docker compose exec api node dist/cli.js users:demo
@@ -337,7 +337,7 @@ docker compose exec api node dist/cli.js users:demo
 
 ## 9. End-to-end test
 
-Record each result in the sign-off table (§9.5). Use a PC with Chrome or Edge and an Android phone with Chrome, both prepared as in §6.3. The tests use the demo accounts (§8.4) and the sample data (§8.3).
+Record each result in the sign-off table (§9.7). Use a PC with Chrome or Edge and an Android phone with Chrome, both prepared as in §6.3. The tests use the demo accounts (§8.4) and the sample data (§8.3).
 
 ### 9.1 Automated smoke test
 
@@ -348,7 +348,7 @@ On the server (or any Linux/macOS machine with `bash` and `curl`):
 ./scripts/smoke-test.sh https://<server-ip> --cacert certs/nwrmp-test-ca.crt    # Option B
 ```
 
-It asks for an administrator email and password (use an account whose temporary password has been changed). **Expected: every check PASS** — 24 checks on HTTPS; on HTTP the two HTTPS-only checks show SKIP. With HTTPS on a server whose HTTP port is not 80, run it as `HTTP_PORT=8080 ./scripts/smoke-test.sh …`.
+It asks for an administrator email and password (use an account whose temporary password has been changed). **Expected: every check PASS** — 26 checks on HTTPS; on HTTP the two HTTPS-only checks show SKIP. With HTTPS on a server whose HTTP port is not 80, run it as `HTTP_PORT=8080 ./scripts/smoke-test.sh …`.
 
 ### 9.2 Web application (PC browser)
 
@@ -387,7 +387,31 @@ It asks for an administrator email and password (use an account whose temporary 
 | F10 | Location correction | Approve inspection 2 with "Move the registered location to the GPS position" ticked (offered when more than 50 m away) | The record's map position moves to the phone's GPS point |
 | F11 | Photo privacy | Copy a photo address (`/api/inspections/photos/…`) and open it in a private browser window | 401 — sign-in required |
 
-### 9.4 Operations
+### 9.4 Water quality laboratory (PC)
+
+| # | Test | Steps | Expected result |
+|---|---|---|---|
+| L1 | Limits | As `lab@nwrmp.test`: Water quality → Limits | 17 parameters with WHO guideline values, e.g. Fluoride ≤ 1.5 mg/L, E. coli ≤ 0 CFU/100 mL, pH 6.5–8.5, each with its source |
+| L2 | Request a test | As `coordinator.mj`: open a Maroodi Jeex source → Water quality → Request test; sample date, sampling point, note → Send request | "Water test requested"; the source shows "Test requested … waiting for the lab"; a second request for the same source is refused |
+| L3 | Lab queue | As `lab@nwrmp.test`: Water quality → Waiting for the lab | The request is listed with its note; the sidebar shows the count |
+| L4 | Enter results | Open the request → Enter results: E. coli 24, Fluoride 0.8, pH 7.4, Turbidity 8 → Save results | While typing, E. coli shows "Above limit" in red and turbidity in amber; outcome "Unsafe for drinking" |
+| L5 | Results on the record | As `coordinator.mj`: open the source; then Dashboard; then Map → Colour markers by Water | The source shows the outcome and values (E. coli red); change history shows "Water test of …" recorded by the lab officer; the "Unsafe drinking water" tile counts it; the marker is red |
+| L6 | Correction | As lab: open the test → Correct results → E. coli 0 → Save correction | Outcome becomes "Taste or appearance concern"; the audit log shows the correction with the previous values |
+| L7 | Edit a limit | As lab: Limits → Edit Fluoride → Maximum 1.0 → Save. As `coordinator.mj` open Limits | New limit shown; results already recorded keep their judgement; the coordinator has no Edit button |
+
+### 9.5 Maintenance (PC; reporting also works on a phone)
+
+| # | Test | Steps | Expected result |
+|---|---|---|---|
+| M1 | Breakdown prompt | As `coordinator.mj`: open a source that is Not functioning | Red banner "Not functioning, and no repair has been requested" |
+| M2 | Report | Report a breakdown: Generator or power supply, priority Urgent, what is wrong, details → Report breakdown | Work order WO-000NN "Waiting for a technician"; the banner disappears; reporting the same problem again is refused |
+| M3 | Take the job | As `maintenance@nwrmp.test`: Maintenance → Open → the work order → Take this job → Start work | "Assigned", then "Repair in progress"; it is listed under My jobs |
+| M4 | Complete | Complete the repair: work done, date, parts, cost, "Yes, working again" → Send repair report | "Waiting for closure"; the repair report is shown |
+| M5 | Close | As `coordinator.mj`: Maintenance → To close → open it → comment → Close | "Closed"; the source is now Functioning; Repairs and interventions lists the repair; change history shows "Repair WO-…" |
+| M6 | Reopen | Report another problem on the same source, complete it as maintenance, then as `coordinator.mj` Reopen with a comment | Back to "Repair in progress" in the technician's My jobs, with the comment shown |
+| M7 | Permissions | As `field.mj`: open a completed work order. As `maintenance@nwrmp.test`: open one you completed | Neither can close it; the field officer can report but not assign |
+
+### 9.6 Operations
 
 | # | Test | Steps | Expected result |
 |---|---|---|---|
@@ -398,14 +422,16 @@ It asks for an administrator email and password (use an account whose temporary 
 | O5 | Update procedure | `./scripts/update.sh` | Backup taken, images rebuilt, "API healthy (version <commit>)" |
 | O6 | Logs | `docker compose logs --tail 50 api web` | Request activity visible; no repeated errors |
 
-### 9.5 Sign-off
+### 9.7 Sign-off
 
 | Section | Result (Pass / Fail / N/A) | Notes | Tested by / date |
 |---|---|---|---|
 | 9.1 Smoke test | | | |
 | 9.2 Web application W1–W16 | | | |
 | 9.3 Field inspections F1–F11 | | | |
-| 9.4 Operations O1–O6 | | | |
+| 9.4 Water quality L1–L7 | | | |
+| 9.5 Maintenance M1–M7 | | | |
+| 9.6 Operations O1–O6 | | | |
 | Site address and mode (HTTP / HTTPS) | | | |
 | Commit / version deployed | | | |
 

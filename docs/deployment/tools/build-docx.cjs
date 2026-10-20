@@ -24,8 +24,8 @@ const EMBLEM = path.join(ROOT, 'apps/web/public/brand/emblem.png');
 const DOC = {
   title: 'Deployment and End-to-End Test Guide',
   subtitle: 'Rocky Linux server · Docker · access by IP address',
-  version: '1.1',
-  date: '19 October 2026',
+  version: '1.2',
+  date: '20 October 2026',
 };
 
 // Ministry palette (apps/web/src/index.css)
@@ -154,7 +154,7 @@ function heading(block) {
   const isH2 = block.type === 'h2';
   return new Paragraph({
     heading: isH2 ? HeadingLevel.HEADING_1 : HeadingLevel.HEADING_2,
-    pageBreakBefore: /^9\.\s|^9\.5\s/.test(text),
+    pageBreakBefore: /^9\.\s|^9\.7\s/.test(text),
     keepNext: true,
     children: [new Bookmark({ id: anchorFor(text), children: [new TextRun(plain(text))] })],
   });

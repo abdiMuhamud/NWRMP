@@ -4,7 +4,7 @@ import { useSearchParams } from 'react-router';
 import { WaterMap, type ColorBy } from '../components/map/WaterMap';
 import { TypeSwatch } from '../components/ui/Badges';
 import { Segmented, Select } from '../components/ui/Controls';
-import { SOURCE_TYPES, STATUSES, STATUS_META, TYPE_META } from '../lib/domain';
+import { OUTCOMES, OUTCOME_META, SOURCE_TYPES, STATUSES, STATUS_META, TYPE_META } from '../lib/domain';
 import { formatNumber } from '../lib/format';
 import { useAuth } from '../lib/auth';
 import { useReference, useSourceGeojson } from '../lib/queries';
@@ -25,6 +25,7 @@ export function MapPage() {
   const features = geojson.data?.features ?? [];
   const typeCounts = useMemo(() => countBy(features.map((f) => f.properties.type)), [features]);
   const statusCounts = useMemo(() => countBy(features.map((f) => f.properties.status)), [features]);
+  const qualityCounts = useMemo(() => countBy(features.map((f) => f.properties.quality ?? 'untested')), [features]);
   const shown = features.filter((f) => types.includes(f.properties.type) && statuses.includes(f.properties.status)).length;
 
   const toggle = <T,>(list: T[], value: T) => (list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
@@ -96,9 +97,22 @@ export function MapPage() {
                   options={[
                     { value: 'type', label: 'Type' },
                     { value: 'status', label: 'Status' },
+                    { value: 'quality', label: 'Water' },
                   ]}
                 />
               </div>
+              {colorBy === 'quality' && (
+                <ul className="space-y-1 rounded-lg bg-page px-3 py-2" aria-label="Water quality legend">
+                  {OUTCOMES.map((o) => (
+                    <li key={o} className="flex items-center gap-2 text-xs text-ink-2">
+                      <span className="size-3 rounded-full ring-2 ring-white" style={{ background: OUTCOME_META[o].color }} />
+                      <span className="flex-1">{o === 'untested' ? 'No lab result' : OUTCOME_META[o].label}</span>
+                      <span className="tabular text-ink-3">{formatNumber(qualityCounts[o] ?? 0)}</span>
+                    </li>
+                  ))}
+                  <li className="pt-1 text-[11px] text-ink-3">Latest laboratory test of each source.</li>
+                </ul>
+              )}
             </div>
 
             <fieldset>
@@ -114,7 +128,7 @@ export function MapPage() {
                     key={t}
                     checked={types.includes(t)}
                     onChange={() => setTypes(toggle(types, t))}
-                    marker={<TypeSwatch type={t} size={15} color={colorBy === 'status' ? '#727a73' : undefined} />}
+                    marker={<TypeSwatch type={t} size={15} color={colorBy !== 'type' ? '#727a73' : undefined} />}
                     label={TYPE_META[t].plural}
                     count={typeCounts[t] ?? 0}
                   />
