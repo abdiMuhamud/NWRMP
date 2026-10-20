@@ -11,6 +11,8 @@ export default defineConfig({
     // (see src/lib/offline.ts); the service worker never caches API responses.
     VitePWA({
       registerType: 'autoUpdate',
+      // Registered in src/lib/pwa.ts, which also checks hourly for updates and offers a reload.
+      injectRegister: false,
       includeAssets: ['favicon.png', 'apple-touch-icon.png', 'brand/emblem.png'],
       manifest: {
         name: 'NWRMP · Ministry of Water Development',
@@ -30,6 +32,10 @@ export default defineConfig({
         ],
       },
       workbox: {
+        // A new version takes over at once (the plugin only sets these itself when it injects the
+        // registration); open pages then show the reload banner.
+        skipWaiting: true,
+        clientsClaim: true,
         globPatterns: ['**/*.{js,css,html,png,svg,woff2}'],
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         navigateFallback: '/index.html',
