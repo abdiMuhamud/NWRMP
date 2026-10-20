@@ -10,6 +10,7 @@
 //                                             Create one user with a temporary password (printed once)
 //   users:import file.csv                     Create users from a CSV (full_name,email,role,department,region)
 //   users:demo                                Create one demo account per role (password printed once)
+//   users:reset-password --email E            New temporary password for a user (printed once), e.g. a locked-out administrator
 import 'dotenv/config';
 import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -27,6 +28,7 @@ const USAGE = `Usage: cli <command>
   users:create --email <email> --name "<full name>" --role <role> [--department <code>] [--region <code>]
   users:import <file.csv>
   users:demo
+  users:reset-password --email <email>
 
 Roles: ${ROLES.join(', ')}
 Departments: ${DEPARTMENT_CODES.join(', ')}
@@ -59,6 +61,8 @@ async function main() {
         return await createUser(db);
       case 'users:import':
         return await importUsers(db, process.argv[3]);
+      case 'users:reset-password':
+        return await resetPassword(db);
       case 'users:demo': {
         const { created, lines } = await createDemoUsers(db, null);
         console.log(created.length ? lines.join('\n') : 'All demo accounts already exist.');
@@ -123,6 +127,35 @@ async function createUser(db: Db) {
   console.log(`Created ${email} (${ROLE_LABELS[role]}).`);
   console.log(`Temporary password: ${password}`);
   console.log('They must choose a new password at first sign-in.');
+}
+
+/** Recovery from the server: a new temporary password, account unlocked and reactivated, sessions ended. */
+async function resetPassword(db: Db) {
+  const email = arg('email')?.trim().toLowerCase();
+  if (!email) throw new Error('Required: --email');
+  const [user] = await db.query<{ id: string; full_name: string; is_active: boolean }>(
+    'SELECT id, full_name, is_active FROM users WHERE lower(email) = $1',
+    [email],
+  );
+  if (!user) throw new Error(`No user with the email ${email}`);
+
+  const password = generatePassword();
+  await db.transaction(async (tx) => {
+    await tx.query(
+      `UPDATE users SET password_hash = $2, must_change_password = true, failed_logins = 0, locked_until = NULL,
+              is_active = true, updated_at = now()
+        WHERE id = $1`,
+      [user.id, await hashPassword(password)],
+    );
+    await tx.query('DELETE FROM sessions WHERE user_id = $1', [user.id]);
+    await tx.query(
+      `INSERT INTO audit_log (user_id, action, entity_type, entity_id, summary) VALUES (NULL, 'user.reset_password', 'user', $1, $2)`,
+      [user.id, `Reset password for ${user.full_name} from the server command line`],
+    );
+  });
+  console.log(`Reset the password for ${user.full_name} (${email})${user.is_active ? '' : ' and reactivated the account'}.`);
+  console.log(`Temporary password: ${password}`);
+  console.log('They must choose a new password at sign-in.');
 }
 
 /** Minimal CSV reader: comma-separated, optional double quotes, first row is the header, # starts a comment. */
