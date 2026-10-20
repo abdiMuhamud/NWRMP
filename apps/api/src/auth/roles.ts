@@ -57,6 +57,14 @@ export const PERMISSIONS = [
   'inspections.assign',
   'inspections.submit',
   'inspections.review',
+  // Water-quality lab: request a test, record results, edit the limits
+  'lab.request',
+  'lab.record',
+  'lab.standards',
+  // Maintenance: report a breakdown, do the work (take, assign, complete), close after checking
+  'maintenance.report',
+  'maintenance.work',
+  'maintenance.close',
 ] as const;
 export type Permission = (typeof PERMISSIONS)[number];
 
@@ -71,9 +79,15 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     'inspections.assign',
     'inspections.submit',
     'inspections.review',
+    'lab.request',
+    'lab.record',
+    'lab.standards',
+    'maintenance.report',
+    'maintenance.work',
+    'maintenance.close',
   ],
   department_reviewer: ['sources.view', 'sources.propose', 'sources.approve', 'quality.view'],
-  data_officer: ['sources.view', 'sources.propose', 'quality.view', 'inspections.assign'],
+  data_officer: ['sources.view', 'sources.propose', 'quality.view', 'inspections.assign', 'lab.request', 'maintenance.report'],
   regional_coordinator: [
     'sources.view',
     'sources.propose',
@@ -81,10 +95,13 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     'inspections.assign',
     'inspections.submit',
     'inspections.review',
+    'lab.request',
+    'maintenance.report',
+    'maintenance.close',
   ],
-  field_officer: ['sources.view', 'inspections.submit'],
-  lab_officer: ['sources.view'],
-  maintenance_officer: ['sources.view'],
+  field_officer: ['sources.view', 'inspections.submit', 'lab.request', 'maintenance.report'],
+  lab_officer: ['sources.view', 'lab.record', 'lab.standards'],
+  maintenance_officer: ['sources.view', 'maintenance.report', 'maintenance.work'],
   viewer: ['sources.view', 'quality.view'],
 };
 

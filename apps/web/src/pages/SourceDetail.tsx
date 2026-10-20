@@ -1,7 +1,9 @@
-import { ArrowLeft, CalendarCheck, ClipboardPen, ClipboardPlus, Clock, Images, Info, MapPin, Pencil, Wrench } from 'lucide-react';
+import { ArrowLeft, CalendarCheck, ClipboardPen, ClipboardPlus, Clock, Images, Info, MapPin, Pencil } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { AssignDialog } from '../components/inspections/AssignDialog';
+import { SourceMaintenance, UnreportedBreakdownBanner } from '../components/maintenance/SourceMaintenance';
+import { SourceLabResults } from '../components/quality/SourceLabResults';
 import { InspectionStateBadge } from '../components/inspections/InspectionStateBadge';
 import { WaterMap } from '../components/map/WaterMap';
 import { SeverityBadge, StatusBadge, TypeLabel, TypeSwatch, VerificationBadge } from '../components/ui/Badges';
@@ -184,6 +186,8 @@ function SourceRecord({ s }: { s: Detail }) {
         </div>
       )}
 
+      <UnreportedBreakdownBanner s={s} />
+
       {s.verification === 'unverified' && (
         <div className="mb-6 flex gap-3 rounded-xl border border-gold-300/70 bg-gold-100/60 px-4 py-3 text-sm text-gold-800">
           <Info size={18} className="mt-0.5 shrink-0" aria-hidden />
@@ -262,17 +266,7 @@ function SourceRecord({ s }: { s: Detail }) {
             />
           </Card>
 
-          <Card title="Water quality" subtitle="Physical observation at the last visit. Laboratory results will appear here in Phase 3.">
-            <FactList
-              columns={3}
-              facts={[
-                { label: 'Issue reported', value: s.qualityIssue ?? 'None reported' },
-                { label: 'Colour / odour', value: s.colorOdor },
-                { label: 'Temperature', value: s.temperatureC !== null && formatMeasure(s.temperatureC, '°C') },
-                { label: 'pH', value: s.ph !== null && formatNumber(s.ph, 1) },
-              ].map(noFalse)}
-            />
-          </Card>
+          <SourceLabResults s={s} />
         </div>
 
         <aside className="space-y-6">
@@ -358,27 +352,7 @@ function SourceRecord({ s }: { s: Detail }) {
           <SourceHistory source={s} />
           {assignOpen && <AssignDialog open onClose={() => setAssignOpen(false)} source={{ id: s.id, name: s.name, regionId: s.regionId }} />}
 
-          <Card title="Repairs and interventions" bodyClassName="px-5 py-4">
-            {s.interventions.length === 0 ? (
-              <p className="text-sm text-ink-3">None recorded.</p>
-            ) : (
-              <ul className="space-y-3">
-                {s.interventions.map((iv) => (
-                  <li key={iv.id} className="flex gap-3">
-                    <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-lg bg-water-50 text-water-600">
-                      <Wrench size={14} aria-hidden />
-                    </span>
-                    <div className="min-w-0 text-sm">
-                      <div className="font-medium text-ink">{iv.description ?? 'Intervention'}</div>
-                      <div className="text-xs text-ink-3">
-                        {formatDate(iv.performedOn)} · {iv.agency ?? 'Agency not recorded'}
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Card>
+          <SourceMaintenance s={s} />
 
           {s.issues.length > 0 && (
             <Card title="Data quality notes" subtitle="Found when this record was imported" bodyClassName="px-5 py-3">

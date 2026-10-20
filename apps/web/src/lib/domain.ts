@@ -1,5 +1,18 @@
-import { CircleCheck, CircleHelp, CircleX, Archive, type LucideIcon } from 'lucide-react';
-import type { FunctionalStatus, Severity, SourceType } from './types';
+import {
+  Archive,
+  Ban,
+  CircleCheck,
+  CircleDashed,
+  CircleHelp,
+  CircleX,
+  Clock,
+  Hammer,
+  ShieldAlert,
+  TriangleAlert,
+  UserCheck,
+  type LucideIcon,
+} from 'lucide-react';
+import type { FunctionalStatus, Severity, SourceType, TestOutcome, WorkOrderPriority, WorkOrderStatus } from './types';
 
 export const SOURCE_TYPES: SourceType[] = ['borehole', 'shallow_well', 'berkad', 'dam', 'spring'];
 export const STATUSES: FunctionalStatus[] = ['functioning', 'non_functioning', 'abandoned', 'unknown'];
@@ -49,3 +62,28 @@ export const SEVERITY_META: Record<Severity, { label: string; plural: string; in
 export function typeLabel(type: string): string {
   return TYPE_META[type as SourceType]?.label ?? type;
 }
+
+/** Laboratory test outcomes, reusing the status colours: green meets, amber concern, red unsafe. */
+export const OUTCOME_META: Record<TestOutcome | 'untested', { label: string; short: string; color: string; ink: string; wash: string; icon: LucideIcon }> = {
+  meets: { label: 'Meets standards', short: 'Meets standards', color: '#0ca30c', ink: '#006300', wash: '#e6f5e6', icon: CircleCheck },
+  concern: { label: 'Taste or appearance concern', short: 'Concern', color: '#fab219', ink: '#7a5200', wash: '#fff4dc', icon: TriangleAlert },
+  unsafe: { label: 'Unsafe for drinking', short: 'Unsafe', color: '#d03b3b', ink: '#a32323', wash: '#fbeaea', icon: ShieldAlert },
+  untested: { label: 'Not tested', short: 'Not tested', color: '#a3a29b', ink: '#52514e', wash: '#efeeeb', icon: CircleDashed },
+};
+export const OUTCOMES: (TestOutcome | 'untested')[] = ['unsafe', 'concern', 'meets', 'untested'];
+
+export const WORK_ORDER_STATUS_META: Record<WorkOrderStatus, { label: string; color: string; ink: string; wash: string; icon: LucideIcon }> = {
+  open: { label: 'Waiting for a technician', color: '#d03b3b', ink: '#a32323', wash: '#fbeaea', icon: CircleDashed },
+  assigned: { label: 'Assigned', color: '#2a6ca6', ink: '#164a73', wash: '#eef5fb', icon: UserCheck },
+  in_progress: { label: 'Repair in progress', color: '#2a6ca6', ink: '#164a73', wash: '#eef5fb', icon: Hammer },
+  completed: { label: 'Waiting for closure', color: '#c98500', ink: '#7a5200', wash: '#fff4dc', icon: Clock },
+  closed: { label: 'Closed', color: '#0ca30c', ink: '#006300', wash: '#e6f5e6', icon: CircleCheck },
+  cancelled: { label: 'Cancelled', color: '#898781', ink: '#52514e', wash: '#efeeeb', icon: Ban },
+};
+
+export const PRIORITY_META: Record<WorkOrderPriority, { label: string; ink: string; wash: string }> = {
+  urgent: { label: 'Urgent', ink: '#a32323', wash: '#fbeaea' },
+  high: { label: 'High', ink: '#7a5200', wash: '#fff4dc' },
+  normal: { label: 'Normal', ink: '#52514e', wash: '#efeeeb' },
+  low: { label: 'Low', ink: '#6b6a64', wash: '#f5f4f1' },
+};

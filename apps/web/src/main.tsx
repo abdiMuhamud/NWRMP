@@ -18,6 +18,8 @@ import { MyInspections } from './pages/field/MyInspections';
 import { InspectionReview } from './pages/inspections/InspectionReview';
 import { Inspections } from './pages/inspections/Inspections';
 import { Login } from './pages/Login';
+import { Maintenance } from './pages/maintenance/Maintenance';
+import { WorkOrderDetail } from './pages/maintenance/WorkOrderDetail';
 import { MapPage } from './pages/MapPage';
 import { NotFound } from './pages/NotFound';
 import { Planned } from './pages/Planned';
@@ -25,6 +27,9 @@ import { ReviewRequest } from './pages/ReviewRequest';
 import { SourceDetail } from './pages/SourceDetail';
 import { SourceForm } from './pages/SourceForm';
 import { Sources } from './pages/Sources';
+import { TestDetail } from './pages/water-quality/TestDetail';
+import { TestForm } from './pages/water-quality/TestForm';
+import { WaterQuality } from './pages/water-quality/WaterQuality';
 
 const queryClient = new QueryClient({
   queryCache: new QueryCache({
@@ -62,6 +67,11 @@ const router = createBrowserRouter([
       { path: 'field/inspect/:sourceId', element: <InspectionForm /> },
       { path: 'inspections', element: <Inspections /> },
       { path: 'inspections/:id', element: <InspectionReview /> },
+      { path: 'water-quality', element: <WaterQuality /> },
+      { path: 'water-quality/record', element: <TestForm /> },
+      { path: 'water-quality/tests/:id', element: <TestDetail /> },
+      { path: 'maintenance', element: <Maintenance /> },
+      { path: 'maintenance/:id', element: <WorkOrderDetail /> },
       { path: 'admin/users', element: <Users /> },
       { path: 'admin/audit', element: <Audit /> },
       { path: 'account', element: <Account /> },

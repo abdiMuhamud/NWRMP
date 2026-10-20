@@ -17,8 +17,15 @@ import type {
   SourceCollection,
   SourceDetail,
   SourceListItem,
+  SourceWaterQuality,
   Summary,
+  Technician,
+  TestDetail,
+  TestListItem,
   UserRow,
+  WorkOrderDetail,
+  WorkOrderListItem,
+  WqParameter,
 } from './types';
 
 export function useReference() {
@@ -180,6 +187,79 @@ export function useInspectors(regionId: number | undefined, enabled: boolean) {
   return useQuery({
     queryKey: ['inspectors', regionId ?? null],
     queryFn: ({ signal }) => apiGet<Inspector[]>('/inspections/inspectors', { regionId }, signal),
+    enabled,
+  });
+}
+
+export function useWqParameters() {
+  return useQuery({
+    queryKey: ['wq-parameters'],
+    queryFn: ({ signal }) => apiGet<WqParameter[]>('/water-quality/parameters', {}, signal),
+    staleTime: 5 * 60_000,
+  });
+}
+
+export function useTests(box: 'queue' | 'recent' | 'mine', outcome?: string) {
+  return useQuery({
+    queryKey: ['wq-tests', box, outcome ?? null],
+    queryFn: ({ signal }) => apiGet<TestListItem[]>('/water-quality/tests', { box, outcome }, signal),
+  });
+}
+
+export function useTest(id: string | undefined) {
+  return useQuery({
+    queryKey: ['wq-test', id],
+    queryFn: ({ signal }) => apiGet<TestDetail>(`/water-quality/tests/${id}`, {}, signal),
+    enabled: Boolean(id),
+  });
+}
+
+export function useSourceWaterQuality(sourceId: string | undefined) {
+  return useQuery({
+    queryKey: ['wq-source', sourceId],
+    queryFn: ({ signal }) => apiGet<SourceWaterQuality>(`/water-quality/sources/${sourceId}`, {}, signal),
+    enabled: Boolean(sourceId),
+  });
+}
+
+export function useLabCounts(enabled: boolean) {
+  return useQuery({
+    queryKey: ['wq-tests', 'counts'],
+    queryFn: ({ signal }) => apiGet<{ queue: number; myRequests: number; unsafeSources: number }>('/water-quality/counts', {}, signal),
+    enabled,
+    refetchInterval: 60_000,
+  });
+}
+
+export function useWorkOrders(box: 'active' | 'mine' | 'to_close' | 'closed' | 'source', sourceId?: string) {
+  return useQuery({
+    queryKey: ['work-orders', box, sourceId ?? null],
+    queryFn: ({ signal }) => apiGet<WorkOrderListItem[]>('/work-orders', { box, sourceId }, signal),
+    enabled: box !== 'source' || Boolean(sourceId),
+  });
+}
+
+export function useWorkOrder(id: string | undefined) {
+  return useQuery({
+    queryKey: ['work-order', id],
+    queryFn: ({ signal }) => apiGet<WorkOrderDetail>(`/work-orders/${id}`, {}, signal),
+    enabled: Boolean(id),
+  });
+}
+
+export function useWorkOrderCounts(enabled: boolean) {
+  return useQuery({
+    queryKey: ['work-orders', 'counts'],
+    queryFn: ({ signal }) => apiGet<{ unassigned: number; mine: number; toClose: number; active: number }>('/work-orders/counts', {}, signal),
+    enabled,
+    refetchInterval: 60_000,
+  });
+}
+
+export function useTechnicians(enabled: boolean) {
+  return useQuery({
+    queryKey: ['technicians'],
+    queryFn: ({ signal }) => apiGet<Technician[]>('/work-orders/technicians', {}, signal),
     enabled,
   });
 }

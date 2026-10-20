@@ -1,7 +1,7 @@
 import { X } from 'lucide-react';
 import { NavLink } from 'react-router';
 import { useAuth } from '../../lib/auth';
-import { useChangeCounts, useInspectionCounts } from '../../lib/queries';
+import { useChangeCounts, useInspectionCounts, useLabCounts, useWorkOrderCounts } from '../../lib/queries';
 import { SoonTag } from '../ui/Badges';
 import { NAV } from './nav';
 
@@ -32,10 +32,18 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
   const { can, me } = useAuth();
   const counts = useChangeCounts(Boolean(me));
   const inspectionCounts = useInspectionCounts(Boolean(me));
+  const labCounts = useLabCounts(Boolean(me));
+  const workOrderCounts = useWorkOrderCounts(Boolean(me));
+  const isTechnician = me?.user.role === 'maintenance_officer';
   const badges = {
     approvals: counts.data?.toReview ?? 0,
     inspections: inspectionCounts.data?.toReview ?? 0,
     assignments: (inspectionCounts.data?.openAssignments ?? 0) + (inspectionCounts.data?.returned ?? 0),
+    // Lab: tests waiting for results. Maintenance: unassigned and own jobs for technicians, repairs to close for coordinators.
+    lab: labCounts.data?.queue ?? 0,
+    maintenance: isTechnician
+      ? (workOrderCounts.data?.unassigned ?? 0) + (workOrderCounts.data?.mine ?? 0)
+      : (workOrderCounts.data?.toClose ?? 0),
   };
   const visible = (i: (typeof NAV)[number]['items'][number]) =>
     (!i.permission || can(i.permission)) && (!i.anyPermission || i.anyPermission.some((p) => can(p)));
@@ -126,7 +134,7 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
 
         <div className="border-t border-white/10 px-5 py-4 text-xs text-brand-200">
           <div className="font-medium text-brand-100">Test environment</div>
-          <div className="mt-0.5">Version 0.1 · Phase 1: Registry &amp; GIS</div>
+          <div className="mt-0.5">Version 0.3 · Registry, field work, lab and maintenance</div>
         </div>
       </aside>
     </>

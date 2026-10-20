@@ -53,9 +53,16 @@ export class SourcesService {
     const params: unknown[] = [];
     const rows = await this.db.query<{ lng: number; lat: number } & Record<string, unknown>>(
       `SELECT s.id, s.code, s.name, s.type, s.status, s.verification,
-              r.name AS region, d.name AS district, s.people_served AS "peopleServed",
+              r.name AS region, d.name AS district, s.people_served AS "peopleServed", q.outcome AS quality,
               ST_X(s.location::geometry) AS lng, ST_Y(s.location::geometry) AS lat
-       ${SOURCE_FROM} ${sourceWhere(filters, params)}`,
+       ${SOURCE_FROM}
+       -- Latest laboratory result, for colouring the map by water quality
+       LEFT JOIN LATERAL (
+         SELECT t.outcome FROM wq_tests t
+          WHERE t.source_id = s.id AND t.state = 'completed'
+          ORDER BY t.sampled_on DESC, t.recorded_at DESC LIMIT 1
+       ) q ON true
+       ${sourceWhere(filters, params)}`,
       params,
     );
     return {

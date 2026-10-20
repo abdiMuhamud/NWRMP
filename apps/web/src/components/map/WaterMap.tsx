@@ -17,7 +17,7 @@ const STYLE_URL = import.meta.env.VITE_MAP_STYLE_URL || 'https://tiles.openfreem
 const HOME: { center: [number, number]; zoom: number } = { center: [45.6, 9.9], zoom: 5.4 };
 const EMPTY: SourceCollection = { type: 'FeatureCollection', features: [] };
 
-export type ColorBy = 'type' | 'status';
+export type ColorBy = 'type' | 'status' | 'quality';
 
 interface WaterMapProps {
   data: SourceCollection | undefined;
@@ -180,6 +180,7 @@ export function WaterMap({
 }
 
 function iconExpression(colorBy: ColorBy): ExpressionSpecification {
+  if (colorBy === 'quality') return ['concat', 'src-', ['get', 'type'], '-q-', ['coalesce', ['get', 'quality'], 'untested']];
   return ['concat', 'src-', ['get', 'type'], '-', ['get', colorBy === 'type' ? 'type' : 'status']];
 }
 

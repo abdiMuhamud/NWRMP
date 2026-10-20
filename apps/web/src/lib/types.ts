@@ -37,6 +37,8 @@ export interface SourceFeatureProps {
   region: string;
   district: string | null;
   peopleServed: number | null;
+  /** Outcome of the latest laboratory test, if any */
+  quality?: TestOutcome | null;
 }
 
 export interface SourceFeature {
@@ -188,6 +190,8 @@ export interface Reference {
   inspectionFields: string[];
   roles: { code: Role; label: string; regionScoped: boolean }[];
   departments: { code: string; label: string; approves: SourceType[] }[];
+  workOrderCategories: { code: string; label: string }[];
+  workOrderPriorities: { code: WorkOrderPriority; label: string }[];
 }
 
 export type Role =
@@ -209,7 +213,13 @@ export type Permission =
   | 'audit.view'
   | 'inspections.assign'
   | 'inspections.submit'
-  | 'inspections.review';
+  | 'inspections.review'
+  | 'lab.request'
+  | 'lab.record'
+  | 'lab.standards'
+  | 'maintenance.report'
+  | 'maintenance.work'
+  | 'maintenance.close';
 
 export interface Me {
   user: {
@@ -355,6 +365,8 @@ export interface Summary {
     name: string;
     type: SourceType;
   }[];
+  waterQuality: { tested: number; unsafe: number; concern: number };
+  maintenance: { open: number; urgent: number; closedRecently: number; avgRepairDays: number | null; brokenWithoutOrder: number };
 }
 
 export interface QualityReport {
@@ -458,4 +470,152 @@ export interface Inspector {
   role: Role;
   region: string | null;
   openAssignments: number;
+}
+
+// ---------------------------------------------------------------- water quality
+
+export type ParameterKind = 'health' | 'aesthetic' | 'info';
+export type ResultFlag = 'ok' | 'low' | 'high';
+export type TestOutcome = 'meets' | 'concern' | 'unsafe';
+export type TestState = 'requested' | 'completed' | 'cancelled';
+
+export interface WqParameter {
+  code: string;
+  label: string;
+  unit: string;
+  minValue: number | null;
+  maxValue: number | null;
+  kind: ParameterKind;
+  basis: string | null;
+  sortOrder: number;
+  active: boolean;
+}
+
+export interface Exceedance {
+  label: string;
+  unit: string;
+  value: number;
+  flag: ResultFlag;
+  kind: ParameterKind;
+  min: number | null;
+  max: number | null;
+}
+
+export interface TestListItem {
+  id: string;
+  state: TestState;
+  outcome: TestOutcome | null;
+  sampledOn: string | null;
+  samplePoint: string | null;
+  requestedAt: string | null;
+  recordedAt: string | null;
+  requestNote: string | null;
+  requestedBy: string | null;
+  recordedBy: string | null;
+  sourceId: string;
+  code: string;
+  name: string;
+  type: SourceType;
+  regionId: number;
+  region: string;
+  exceedances: Exceedance[];
+}
+
+export interface TestResult {
+  code: string;
+  label: string;
+  unit: string;
+  value: number;
+  flag: ResultFlag;
+  kind: ParameterKind;
+  minValue: number | null;
+  maxValue: number | null;
+  basis: string | null;
+}
+
+export interface TestDetail extends TestListItem {
+  sampledBy: string | null;
+  lab: string | null;
+  analysedOn: string | null;
+  notes: string | null;
+  cancelledReason: string | null;
+  sourceStatus: FunctionalStatus;
+  results: TestResult[];
+  canRecord: boolean;
+  canCorrect: boolean;
+  canCancel: boolean;
+}
+
+export interface SourceWaterQuality {
+  openRequest: { id: string; requestedAt: string; requestedBy: string | null; requestNote: string | null; sampledOn: string | null } | null;
+  tests: {
+    id: string;
+    outcome: TestOutcome;
+    sampledOn: string;
+    samplePoint: string | null;
+    lab: string | null;
+    recordedBy: string | null;
+    results: { code: string; value: number; flag: ResultFlag; kind: ParameterKind; minValue: number | null; maxValue: number | null }[];
+  }[];
+}
+
+// ---------------------------------------------------------------- maintenance
+
+export type WorkOrderStatus = 'open' | 'assigned' | 'in_progress' | 'completed' | 'closed' | 'cancelled';
+export type WorkOrderPriority = 'urgent' | 'high' | 'normal' | 'low';
+
+export interface WorkOrderListItem {
+  id: string;
+  ref: string;
+  status: WorkOrderStatus;
+  priority: WorkOrderPriority;
+  category: string;
+  title: string;
+  reportedAt: string;
+  assignedAt: string | null;
+  completedAt: string | null;
+  closedAt: string | null;
+  reportedBy: string | null;
+  assignedTo: string | null;
+  assignedToId: string | null;
+  workingAfter: boolean | null;
+  sourceId: string;
+  code: string;
+  name: string;
+  type: SourceType;
+  sourceStatus: FunctionalStatus;
+  regionId: number;
+  region: string;
+}
+
+export interface WorkOrderDetail extends WorkOrderListItem {
+  categoryLabel: string;
+  description: string | null;
+  inspectionId: string | null;
+  startedAt: string | null;
+  workDone: string | null;
+  completedOn: string | null;
+  partsUsed: string | null;
+  costUsd: number | null;
+  performedBy: string | null;
+  completedBy: string | null;
+  closedBy: string | null;
+  closeComment: string | null;
+  cancelledReason: string | null;
+  timeline: { id: string; at: string; action: string; summary: string; userName: string | null }[];
+  canAssign: boolean;
+  canTake: boolean;
+  canStart: boolean;
+  canComplete: boolean;
+  canClose: boolean;
+  canReopen: boolean;
+  closeBlockedReason: string | null;
+  canCancel: boolean;
+}
+
+export interface Technician {
+  id: string;
+  fullName: string;
+  email: string;
+  openJobs: number;
 }

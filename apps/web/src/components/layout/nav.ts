@@ -27,7 +27,7 @@ export interface NavItem {
   /** Hidden unless the user holds at least one of these */
   anyPermission?: Permission[];
   /** Count shown next to the item */
-  badge?: 'approvals' | 'inspections' | 'assignments';
+  badge?: 'approvals' | 'inspections' | 'assignments' | 'lab' | 'maintenance';
 }
 
 export interface NavGroup {
@@ -56,8 +56,8 @@ export const NAV: NavGroup[] = [
     items: [
       { to: '/field', label: 'My inspections', icon: ClipboardPen, permission: 'inspections.submit', badge: 'assignments' },
       { to: '/inspections', label: 'Inspections', icon: ClipboardList, anyPermission: ['inspections.assign', 'inspections.review'], badge: 'inspections' },
-      { to: '/planned/water-quality', label: 'Water quality', icon: FlaskConical, soon: true },
-      { to: '/planned/maintenance', label: 'Maintenance', icon: Wrench, soon: true },
+      { to: '/water-quality', label: 'Water quality', icon: FlaskConical, badge: 'lab' },
+      { to: '/maintenance', label: 'Maintenance', icon: Wrench, badge: 'maintenance' },
       { to: '/planned/reports', label: 'Reports', icon: FileBarChart, soon: true },
     ],
   },

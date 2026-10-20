@@ -1,4 +1,4 @@
-import { ChevronDown, FileSpreadsheet, PencilLine, PlusCircle } from 'lucide-react';
+import { ChevronDown, FileSpreadsheet, FlaskConical, PencilLine, PlusCircle, Wrench } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { changeRows } from '../lib/fields';
@@ -15,7 +15,7 @@ export function SourceHistory({ source }: { source: SourceDetail & { createdAt?:
   const createdInApp = entries.some((e) => e.action === 'source.create');
 
   return (
-    <Card title="Change history" subtitle="Approved changes, newest first" bodyClassName="px-5 py-4">
+    <Card title="Change history" subtitle="Approved changes, lab tests and repairs, newest first" bodyClassName="px-5 py-4">
       {!history.data ? (
         <LoadingBlock rows={3} />
       ) : (
@@ -48,15 +48,29 @@ function HistoryItem({ entry, source }: { entry: HistoryEntry; source: SourceDet
   const proposed = entry.changes?.proposed;
   const rows = proposed ? changeRows(reference.data, source.type, proposed, entry.changes?.previous ?? null) : [];
   const isCreate = entry.action === 'source.create';
-  const inspectionId = (entry.changes as { inspectionId?: string } | null)?.inspectionId;
+  const links = (entry.changes ?? {}) as { inspectionId?: string; testId?: string; workOrderId?: string };
+  const inspectionId = links.inspectionId;
+  const isLab = entry.action.startsWith('source.lab');
+  const isRepair = entry.action === 'source.repair';
+  const verb = isLab ? 'Recorded' : isRepair ? 'Closed' : 'Approved';
 
   return (
     <li className="relative">
-      <Dot>{isCreate ? <PlusCircle size={11} aria-hidden /> : <PencilLine size={11} aria-hidden />}</Dot>
+      <Dot>
+        {isCreate ? (
+          <PlusCircle size={11} aria-hidden />
+        ) : isLab ? (
+          <FlaskConical size={11} aria-hidden />
+        ) : isRepair ? (
+          <Wrench size={11} aria-hidden />
+        ) : (
+          <PencilLine size={11} aria-hidden />
+        )}
+      </Dot>
       <div className="text-sm font-medium text-ink">{isCreate ? 'Registered' : entry.summary}</div>
       <div className="text-xs text-ink-2">
-        Approved by {entry.userName ?? 'unknown'} · {formatDate(entry.at)}
-        {entry.changes?.requestedBy && <> · {inspectionId ? 'inspected' : 'proposed'} by {entry.changes.requestedBy}</>}
+        {verb} by {entry.userName ?? 'unknown'} · {formatDate(entry.at)}
+        {entry.changes?.requestedBy && <> · {inspectionId ? 'inspected' : isRepair ? 'repaired' : 'proposed'} by {entry.changes.requestedBy}</>}
       </div>
       {!isCreate && rows.length > 0 && (
         <>
@@ -85,6 +99,16 @@ function HistoryItem({ entry, source }: { entry: HistoryEntry; source: SourceDet
       {inspectionId && (
         <Link to={`/inspections/${inspectionId}`} className="mt-1 block text-xs text-ink-3 hover:text-brand-700 hover:underline">
           View inspection
+        </Link>
+      )}
+      {links.testId && (
+        <Link to={`/water-quality/tests/${links.testId}`} className="mt-1 block text-xs text-ink-3 hover:text-brand-700 hover:underline">
+          View test
+        </Link>
+      )}
+      {links.workOrderId && (
+        <Link to={`/maintenance/${links.workOrderId}`} className="mt-1 block text-xs text-ink-3 hover:text-brand-700 hover:underline">
+          View work order
         </Link>
       )}
       {entry.changes?.requestId && (
