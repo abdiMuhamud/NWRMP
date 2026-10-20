@@ -131,6 +131,9 @@ export class UsersService {
   }
 
   async resetPassword(id: string, actor: AuthUser, ip: string | null) {
+    // A reset signs the user out everywhere: on your own account the new password would be lost
+    // with the page. Your own password is changed under My account.
+    if (id === actor.id) throw new BadRequestException('Change your own password under My account, not with a reset');
     const user = (await this.get(id)) as { fullName: string };
     const temporaryPassword = generatePassword();
     const hash = await hashPassword(temporaryPassword);

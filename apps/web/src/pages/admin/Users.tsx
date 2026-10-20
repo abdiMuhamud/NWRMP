@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Copy, KeyRound, Lock, Pencil, UserPlus } from 'lucide-react';
-import { useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useBlocker } from 'react-router';
 import { Card } from '../../components/ui/Card';
 import { Button, Field, Select, borderFor, inputClass } from '../../components/ui/Controls';
 import { Dialog } from '../../components/ui/Dialog';
@@ -33,6 +34,7 @@ export function Users() {
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState<UserRow | 'new' | null>(null);
   const [secret, setSecret] = useState<{ name: string; password: string } | null>(null);
+  const [confirmReset, setConfirmReset] = useState<UserRow | null>(null);
   const [filter, setFilter] = useState('');
 
   const roleLabel = (r: Role) => reference.data?.roles.find((x) => x.code === r)?.label ?? r;
@@ -41,10 +43,14 @@ export function Users() {
   const resetPassword = useMutation({
     mutationFn: (u: UserRow) => apiPost<{ temporaryPassword: string }>(`/users/${u.id}/reset-password`).then((r) => ({ ...r, u })),
     onSuccess: ({ temporaryPassword, u }) => {
+      setConfirmReset(null);
       setSecret({ name: u.fullName, password: temporaryPassword });
       queryClient.invalidateQueries({ queryKey: ['users'] });
     },
-    onError: (err) => toast(err instanceof ApiError ? err.message : 'Could not reset the password', 'error'),
+    onError: (err) => {
+      setConfirmReset(null);
+      toast(err instanceof ApiError ? err.message : 'Could not reset the password', 'error');
+    },
   });
 
   const toggleActive = useMutation({
@@ -125,9 +131,12 @@ export function Users() {
                         <IconButton label={`Edit ${u.fullName}`} onClick={() => setEditing(u)}>
                           <Pencil size={15} />
                         </IconButton>
-                        <IconButton label={`Reset password for ${u.fullName}`} onClick={() => resetPassword.mutate(u)} disabled={resetPassword.isPending}>
-                          <KeyRound size={15} />
-                        </IconButton>
+                        {/* Your own password is changed under My account: a reset would sign you out with the new password unseen. */}
+                        {u.id !== me?.user.id && (
+                          <IconButton label={`Reset password for ${u.fullName}`} onClick={() => setConfirmReset(u)} disabled={resetPassword.isPending}>
+                            <KeyRound size={15} />
+                          </IconButton>
+                        )}
                         {u.id !== me?.user.id && (
                           <Button variant="ghost" className="h-8 px-2.5 text-xs" onClick={() => toggleActive.mutate(u)} disabled={toggleActive.isPending}>
                             {u.isActive ? 'Deactivate' : 'Reactivate'}
@@ -152,34 +161,28 @@ export function Users() {
       )}
 
       <Dialog
-        open={Boolean(secret)}
-        onClose={() => setSecret(null)}
-        title="Temporary password"
-        description={secret ? `Give this password to ${secret.name}. It is shown only once.` : undefined}
+        open={Boolean(confirmReset)}
+        onClose={() => setConfirmReset(null)}
+        title="Reset the password?"
         size="sm"
-        footer={<Button variant="primary" onClick={() => setSecret(null)}>Done</Button>}
+        footer={
+          <>
+            <Button onClick={() => setConfirmReset(null)}>Cancel</Button>
+            <Button variant="primary" disabled={resetPassword.isPending} onClick={() => confirmReset && resetPassword.mutate(confirmReset)}>
+              <KeyRound size={15} aria-hidden /> Reset password
+            </Button>
+          </>
+        }
       >
-        {secret && (
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 rounded-lg border border-line bg-page px-3 py-2.5">
-              <code className="flex-1 font-mono text-base tracking-wide text-ink">{secret.password}</code>
-              <Button
-                variant="ghost"
-                className="h-8 px-2"
-                onClick={() =>
-                  copyText(secret.password).then(
-                    () => toast('Copied'),
-                    () => toast('Copy is not available here: select the password and copy it', 'error'),
-                  )
-                }
-              >
-                <Copy size={15} aria-hidden /> Copy
-              </Button>
-            </div>
-            <p className="text-xs text-ink-3">They will be asked to choose their own password the first time they sign in.</p>
-          </div>
+        {confirmReset && (
+          <p className="text-sm text-ink-2">
+            <span className="font-medium text-ink">{confirmReset.fullName}</span>’s current password stops working and they are signed out on every
+            device. You will see a temporary password once, to give to them.
+          </p>
         )}
       </Dialog>
+
+      {secret && <SecretDialog secret={secret} onDone={() => setSecret(null)} />}
     </>
   );
 }
@@ -317,6 +320,68 @@ function UserDialog({ user, onClose, onCreated }: { user: UserRow | null; onClos
           </p>
         )}
       </form>
+    </Dialog>
+  );
+}
+
+/**
+ * Shows a temporary password once. It stays open, and leaving the page is held back, until the
+ * administrator has copied it or confirmed they wrote it down: it cannot be shown again.
+ */
+function SecretDialog({ secret, onDone }: { secret: { name: string; password: string }; onDone: () => void }) {
+  const toast = useToast();
+  const [saved, setSaved] = useState(false);
+
+  // Leaving the app (refresh, closing the tab) asks first; in-app navigation (Back) is held back.
+  useEffect(() => {
+    const warn = (e: BeforeUnloadEvent) => e.preventDefault();
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, []);
+  const blocker = useBlocker(true);
+  useEffect(() => {
+    if (blocker.state === 'blocked') blocker.reset();
+  }, [blocker]);
+
+  return (
+    <Dialog
+      open
+      dismissible={false}
+      onClose={onDone}
+      title="Temporary password"
+      description={`Give this password to ${secret.name}. It is shown only once and cannot be shown again.`}
+      size="sm"
+      footer={
+        <Button variant="primary" disabled={!saved} onClick={onDone}>
+          Done
+        </Button>
+      }
+    >
+      <div className="space-y-3">
+        <div className="flex items-center gap-2 rounded-lg border border-line bg-page px-3 py-2.5">
+          <code className="flex-1 select-all font-mono text-base tracking-wide text-ink">{secret.password}</code>
+          <Button
+            variant="ghost"
+            className="h-8 px-2"
+            onClick={() =>
+              copyText(secret.password).then(
+                () => {
+                  setSaved(true);
+                  toast('Copied');
+                },
+                () => toast('Copy is not available here: select the password and copy it', 'error'),
+              )
+            }
+          >
+            <Copy size={15} aria-hidden /> Copy
+          </Button>
+        </div>
+        <label className="flex items-start gap-2.5 text-sm text-ink">
+          <input type="checkbox" checked={saved} onChange={(e) => setSaved(e.target.checked)} className="mt-0.5 size-4 accent-brand-700" />
+          <span>I have copied or written down this password</span>
+        </label>
+        <p className="text-xs text-ink-3">They will be asked to choose their own password the first time they sign in.</p>
+      </div>
     </Dialog>
   );
 }
