@@ -3,10 +3,12 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router';
 import { AppShell } from './components/layout/AppShell';
+import { UpdateBanner } from './components/layout/UpdateBanner';
 import { ToastProvider } from './components/ui/Toast';
 import './index.css';
 import { ApiError } from './lib/api';
 import { AuthProvider } from './lib/auth';
+import { registerServiceWorker } from './lib/pwa';
 import { Account } from './pages/Account';
 import { Audit } from './pages/admin/Audit';
 import { Users } from './pages/admin/Users';
@@ -81,11 +83,13 @@ const router = createBrowserRouter([
   },
 ]);
 
+registerServiceWorker();
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <ToastProvider>
+        <ToastProvider pinned={<UpdateBanner />}>
           <RouterProvider router={router} />
         </ToastProvider>
       </AuthProvider>

@@ -9,7 +9,8 @@ interface Toast {
 
 const ToastContext = createContext<(message: string, tone?: Toast['tone']) => void>(() => {});
 
-export function ToastProvider({ children }: { children: ReactNode }) {
+/** `pinned` stays at the bottom of the stack until it removes itself (e.g. the update banner). */
+export function ToastProvider({ children, pinned }: { children: ReactNode; pinned?: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const show = useCallback((message: string, tone: Toast['tone'] = 'success') => {
@@ -44,6 +45,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             </button>
           </div>
         ))}
+        {pinned}
       </div>
     </ToastContext.Provider>
   );
