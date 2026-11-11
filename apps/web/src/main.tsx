@@ -19,12 +19,14 @@ import { InspectionForm } from './pages/field/InspectionForm';
 import { MyInspections } from './pages/field/MyInspections';
 import { InspectionReview } from './pages/inspections/InspectionReview';
 import { Inspections } from './pages/inspections/Inspections';
+import { ImportData } from './pages/ImportData';
 import { Login } from './pages/Login';
 import { Maintenance } from './pages/maintenance/Maintenance';
 import { WorkOrderDetail } from './pages/maintenance/WorkOrderDetail';
 import { MapPage } from './pages/MapPage';
 import { NotFound } from './pages/NotFound';
 import { Planned } from './pages/Planned';
+import { Reports } from './pages/Reports';
 import { ReviewRequest } from './pages/ReviewRequest';
 import { SourceDetail } from './pages/SourceDetail';
 import { SourceForm } from './pages/SourceForm';
@@ -65,6 +67,8 @@ const router = createBrowserRouter([
       { path: 'approvals', element: <Approvals /> },
       { path: 'approvals/:id', element: <ReviewRequest /> },
       { path: 'data-quality', element: <DataQuality /> },
+      { path: 'import', element: <ImportData /> },
+      { path: 'reports', element: <Reports /> },
       { path: 'field', element: <MyInspections /> },
       { path: 'field/inspect/:sourceId', element: <InspectionForm /> },
       { path: 'inspections', element: <Inspections /> },

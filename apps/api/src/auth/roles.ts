@@ -65,6 +65,8 @@ export const PERMISSIONS = [
   'maintenance.report',
   'maintenance.work',
   'maintenance.close',
+  // Upload a workbook in the Ministry template into the registry
+  'data.import',
 ] as const;
 export type Permission = (typeof PERMISSIONS)[number];
 
@@ -85,9 +87,10 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     'maintenance.report',
     'maintenance.work',
     'maintenance.close',
+    'data.import',
   ],
   department_reviewer: ['sources.view', 'sources.propose', 'sources.approve', 'quality.view'],
-  data_officer: ['sources.view', 'sources.propose', 'quality.view', 'inspections.assign', 'lab.request', 'maintenance.report'],
+  data_officer: ['sources.view', 'sources.propose', 'quality.view', 'inspections.assign', 'lab.request', 'maintenance.report', 'data.import'],
   regional_coordinator: [
     'sources.view',
     'sources.propose',

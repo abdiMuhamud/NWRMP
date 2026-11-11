@@ -149,7 +149,7 @@ docker run --rm hello-world
 git clone https://github.com/abdiMuhamud/NWRMP.git /opt/nwrmp
 cd /opt/nwrmp
 git checkout main          # or a release tag agreed with the project team
-git log --oneline -1       # note the commit for the test record (§9.7)
+git log --oneline -1       # note the commit for the test record (§9.8)
 cd /opt/nwrmp/deploy
 ```
 
@@ -313,15 +313,15 @@ docker compose exec -u root api rm /tmp/staff.csv /tmp/staff.passwords.local.txt
 docker compose exec api node dist/cli.js seed
 ```
 
-- **For production**, import the Ministry's own workbook (same template as the sample):
+- **For production**, import the Ministry's own workbook (same template as the sample) in the app: sign in as an administrator, open **Registry → Import data**, choose the file and click **Check the file**. The check shows what would be added, skipped and possibly duplicated without saving anything. Tick **Remove the sample records first** if the sample was loaded, check again, then **Import**. Records are added as unverified and every problem is listed under **Data quality**.
+
+  The same import from the server, for very large files:
 
 ```bash
 docker compose cp <national-water-sources>.xlsx api:/tmp/sources.xlsx
 docker compose exec api node dist/cli.js seed /tmp/sources.xlsx
 docker compose exec -u root api rm /tmp/sources.xlsx
 ```
-
-The import report lists rows imported, skipped and data-quality issues; the issues are also shown in the app under **Data quality**.
 
 ### 8.4 Demo accounts for testing (optional)
 
@@ -337,7 +337,7 @@ docker compose exec api node dist/cli.js users:demo
 
 ## 9. End-to-end test
 
-Record each result in the sign-off table (§9.7). Use a PC with Chrome or Edge and an Android phone with Chrome, both prepared as in §6.3. The tests use the demo accounts (§8.4) and the sample data (§8.3).
+Record each result in the sign-off table (§9.8). Use a PC with Chrome or Edge and an Android phone with Chrome, both prepared as in §6.3. The tests use the demo accounts (§8.4) and the sample data (§8.3).
 
 ### 9.1 Automated smoke test
 
@@ -348,7 +348,7 @@ On the server (or any Linux/macOS machine with `bash` and `curl`):
 ./scripts/smoke-test.sh https://<server-ip> --cacert certs/nwrmp-test-ca.crt    # Option B
 ```
 
-It asks for an administrator email and password (use an account whose temporary password has been changed). **Expected: every check PASS** — 26 checks on HTTPS; on HTTP the two HTTPS-only checks show SKIP. With HTTPS on a server whose HTTP port is not 80, run it as `HTTP_PORT=8080 ./scripts/smoke-test.sh …`.
+It asks for an administrator email and password (use an account whose temporary password has been changed). **Expected: every check PASS** — 27 checks on HTTPS; on HTTP the two HTTPS-only checks show SKIP. With HTTPS on a server whose HTTP port is not 80, run it as `HTTP_PORT=8080 ./scripts/smoke-test.sh …`.
 
 ### 9.2 Web application (PC browser)
 
@@ -411,7 +411,21 @@ It asks for an administrator email and password (use an account whose temporary 
 | M6 | Reopen | Report another problem on the same source, complete it as maintenance, then as `coordinator.mj` Reopen with a comment | Back to "Repair in progress" in the technician's My jobs, with the comment shown |
 | M7 | Permissions | As `field.mj`: open a completed work order. As `maintenance@nwrmp.test`: open one you completed | Neither can close it; the field officer can report but not assign |
 
-### 9.6 Operations
+### 9.6 Reports and data import (PC)
+
+| # | Test | Steps | Expected result |
+|---|---|---|---|
+| R1 | Summary report | As `admin@nwrmp.test`: Reports | Ministry letterhead, key figures, tables by region and type, water quality and maintenance; "Sample data" note |
+| R2 | Print / PDF | Print or save as PDF → Save as PDF | A4 pages with the report only (no menu or top bar) |
+| R3 | Excel exports | Download each .xlsx under "Download data in Excel"; Water sources → filter a type → Export to Excel | Each file opens in Excel with a green header row; the filtered export has only that type |
+| R4 | Region limits | As `coordinator.mj`: Reports and its downloads | Only Maroodi Jeex; no region choice; no audit-log download |
+| I1 | Check a workbook | As admin: Registry → Import data → choose the sample workbook (`apps/api/data/National_Water_Source_Data_SAMPLE.xlsx`) → Check the file | 64 would be added, 64 possible duplicates (the sample is already loaded); problems listed; nothing saved (source count unchanged) |
+| I2 | Wrong file | Choose a .csv or a renamed file → Check the file | A clear message that the file must be an Excel workbook in the Ministry template |
+| I3 | Permissions | As `viewer@nwrmp.test` and `coordinator.mj` | No Import data item; the import address answers 403 |
+
+On a test installation, the full import with **Remove the sample records first** can also be tried; afterwards reload the sample with `docker compose exec api node dist/cli.js seed --reset`.
+
+### 9.7 Operations
 
 | # | Test | Steps | Expected result |
 |---|---|---|---|
@@ -422,7 +436,7 @@ It asks for an administrator email and password (use an account whose temporary 
 | O5 | Update procedure | `./scripts/update.sh` | Backup taken, images rebuilt, "API healthy (version <commit>)" |
 | O6 | Logs | `docker compose logs --tail 50 api web` | Request activity visible; no repeated errors |
 
-### 9.7 Sign-off
+### 9.8 Sign-off
 
 | Section | Result (Pass / Fail / N/A) | Notes | Tested by / date |
 |---|---|---|---|
@@ -431,7 +445,8 @@ It asks for an administrator email and password (use an account whose temporary 
 | 9.3 Field inspections F1–F11 | | | |
 | 9.4 Water quality L1–L7 | | | |
 | 9.5 Maintenance M1–M7 | | | |
-| 9.6 Operations O1–O6 | | | |
+| 9.6 Reports and import R1–R4, I1–I3 | | | |
+| 9.7 Operations O1–O6 | | | |
 | Site address and mode (HTTP / HTTPS) | | | |
 | Commit / version deployed | | | |
 

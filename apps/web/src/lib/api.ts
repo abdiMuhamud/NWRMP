@@ -66,6 +66,11 @@ async function request<T>(
   return (await res.json()) as T;
 }
 
+/** Full URL of an API path, for links the browser opens itself (file downloads). */
+export function apiHref(path: string, params: QueryParams = {}): string {
+  return buildUrl(path, params).toString();
+}
+
 export function apiGet<T>(path: string, params: QueryParams = {}, signal?: AbortSignal): Promise<T> {
   return request<T>('GET', path, { params, signal });
 }

@@ -13,6 +13,7 @@ import type {
   NearbySource,
   Page,
   QualityReport,
+  ReportSummary,
   Reference,
   SourceCollection,
   SourceDetail,
@@ -261,5 +262,13 @@ export function useTechnicians(enabled: boolean) {
     queryKey: ['technicians'],
     queryFn: ({ signal }) => apiGet<Technician[]>('/work-orders/technicians', {}, signal),
     enabled,
+  });
+}
+
+export function useReportSummary(region?: number) {
+  return useQuery({
+    queryKey: ['report-summary', region ?? null],
+    queryFn: ({ signal }) => apiGet<ReportSummary>('/reports/summary', { region }, signal),
+    placeholderData: keepPreviousData,
   });
 }

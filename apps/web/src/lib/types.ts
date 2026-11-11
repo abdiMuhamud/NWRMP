@@ -219,7 +219,8 @@ export type Permission =
   | 'lab.standards'
   | 'maintenance.report'
   | 'maintenance.work'
-  | 'maintenance.close';
+  | 'maintenance.close'
+  | 'data.import';
 
 export interface Me {
   user: {
@@ -618,4 +619,61 @@ export interface Technician {
   fullName: string;
   email: string;
   openJobs: number;
+}
+
+// ---------------------------------------------------------------- reports and imports
+
+export interface ReportSummary {
+  generatedAt: string;
+  region: { id: number; name: string | null } | null;
+  totals: {
+    sources: number;
+    functioning: number;
+    nonFunctioning: number;
+    abandoned: number;
+    unknown: number;
+    verified: number;
+    sampleRecords: number;
+    peopleServed: number;
+    idpsServed: number;
+    livestock: number;
+  };
+  byRegion: {
+    id: number;
+    code: string;
+    name: string;
+    total: number;
+    functioning: number;
+    nonFunctioning: number;
+    abandoned: number;
+    unknown: number;
+    peopleServed: number;
+    tested: number;
+    unsafe: number;
+    openWorkOrders: number;
+  }[];
+  byType: { type: SourceType; label: string; total: number; functioning: number; nonFunctioning: number; abandoned: number; unknown: number; peopleServed: number }[];
+  waterQuality: { tested: number; meets: number; concern: number; unsafe: number; exceedances: { label: string; unit: string; kind: ParameterKind; sources: number }[] };
+  maintenance: {
+    open: number;
+    urgent: number;
+    closed12m: number;
+    avgRepairDays: number | null;
+    cost12m: number;
+    brokenWithoutOrder: number;
+    byCategory: { category: string; label: string; open: number; closed12m: number; avgRepairDays: number | null; cost12m: number }[];
+  };
+  inspections: { fieldInspections12m: number; sourcesVisited12m: number };
+}
+
+export interface ImportResult {
+  batch: string;
+  sheets: { sheet: string; type: SourceType | null; rows: number; imported: number; skipped: number }[];
+  imported: number;
+  skipped: number;
+  possibleDuplicates: number;
+  issues: Record<Severity, number>;
+  removedSample: number;
+  firstIssues: { sheet: string; row: number | null; field: string | null; severity: Severity; message: string; original: string | null }[];
+  dryRun: boolean;
 }
